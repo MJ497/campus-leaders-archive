@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Campus Leaders — Sign up / Login</title>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <!-- Tailwind CDN (for quick drop-in). Replace with your build for production -->
+  <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="main.css" />
+    <!-- Firebase (compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- <style>
+    /* small helper for image preview */
+    .img-preview { object-fit: cover; width: 96px; height: 96px; border-radius: 8px; }
+    .bghover:hover { background-color: #f3f4f6; }
+  </style> -->
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-4xl grid md:grid-cols-2 gap-6">
+    <!-- LEFT: Branding / art -->
+    <div class="hidden md:flex flex-col justify-center items-start bg-white p-8 rounded-2xl shadow">
+      <img src="logo.png" alt="Campus Leaders" class="h-50 mb-4">
+      <!-- <h1 class="text-2xl font-bold mb-2">Campus Leaders</h1>
+      <p class="text-gray-600 mb-6">Join the network for campus associations and leaders across Nigeria. Create a profile, attach your school & association history, and complete registration through our secure checkout.</p>
+      <ul class="text-sm text-gray-600 space-y-2">
+        <li class="flex items-start gap-2"><i class="fas fa-check active-tab mt-1"></i> Verified school lists per state</li>
+        <li class="flex items-start gap-2"><i class="fas fa-check active-tab mt-1"></i> Add new associations if missing</li>
+        <li class="flex items-start gap-2"><i class="fas fa-check active-tab mt-1"></i> Secure payments (Paystack)</li>
+      </ul> -->
+    </div>
+
+    <!-- RIGHT: Card with tabs -->
+    <div class="bg-white p-6 rounded-2xl shadow">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold" id="panel-title">Sign up</h2>
+        <div class="flex items-center gap-2 text-sm">
+          <button id="tab-signup" class="px-3 py-1 rounded-md bg-two text-white text-sm">Sign up</button>
+          <button id="tab-login" class="px-3 py-1 rounded-md text-gray-600 hover:bg-gray-100">Login</button>
+        </div>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <form id="signup-form" class="space-y-4" novalidate>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700">First name</label>
+            <input name="firstName" required class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Last name</label>
+            <input name="lastName" required class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Username</label>
+            <input name="username" required class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Email</label>
+            <input name="email" type="email" required class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Phone number</label>
+            <input name="phone" type="tel" placeholder="+234..." required class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm" />
+          </div>
+
+          <!-- State -->
+          <div>
+            <label class="block text-xs font-medium text-gray-700">State</label>
+            <select id="state-select" name="state" required class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm">
+              <option value="">Select state</option>
+            </select>
+          </div>
+
+          <!-- School populated by state -->
+          <div>
+            <label class="block text-xs font-medium text-gray-700">School</label>
+            <select id="school-select" name="school" required class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm">
+              <option value="">Select school</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- association: select + add new -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700">Association</label>
+          <div class="flex gap-2 mt-1">
+            <select id="assoc-select" name="association" class="flex-1 rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm">
+              <option value="">Select association (or Add new)</option>
+            </select>
+            <button type="button" id="assoc-add-btn" class="px-3 rounded-md bg-gray-100 bghover">Add</button>
+          </div>
+          <input id="assoc-new-input" placeholder="Enter new association name" class="mt-2 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm hidden" />
+          <p class="text-xs text-gray-500 mt-1">If the association is not listed, click Add and type the name — it'll be saved locally and added to the select.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Position held</label>
+            <input name="position" class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-medium text-gray-700">Details of post</label>
+            <input name="positionDetails" class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Year held</label>
+            <select id="year-held" name="yearHeld" class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm">
+              <option value="">Year</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Password</label>
+            <input name="password" type="password" required class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Confirm password</label>
+            <input name="confirmPassword" type="password" required class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm" />
+          </div>
+        </div>
+
+        <!-- Image upload -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700">Upload image (profile)</label>
+          <div class="mt-2 flex items-center gap-4">
+            <input id="image-input" name="image" type="file" accept="image/*" class="text-sm" />
+            <!-- <img id="image-preview" class="img-preview hidden border" alt="preview" /> -->
+            <div id="image-name" class="text-xs text-gray-500"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-3">
+          <div class="text-sm text-gray-600">Registration fee: <span class="font-semibold text-gray-800">₦<span id="registration-fee">2500</span></span></div>
+          <div class="flex items-center gap-2">
+            <button type="submit" id="signup-submit" class="px-4 py-2 rounded-md bg-two text-white">Continue to checkout</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- LOGIN FORM (hidden by default) -->
+      <form id="login-form" class="space-y-4 hidden" novalidate>
+        <div>
+          <label class="block text-xs font-medium text-gray-700">Email or Username</label>
+          <input name="loginId" required class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700">Password</label>
+          <input name="loginPassword" type="password" required class="mt-1 w-full rounded-md border-gray-200 bg-gray-50 px-3 py-2 text-sm" />
+        </div>
+        <div class="flex items-center justify-between">
+          <a href="#" class="text-xs active-tab">Forgot password?</a>
+          <button type="submit" class="px-4 py-2 rounded-md bg-two text-white">Login</button>
+        </div>
+      </form>
+
+      <!-- small note -->
+      <p class="text-xs text-gray-500 mt-4">By continuing you agree to our <a href="#" class="active-tab">Terms</a> and <a href="#" class="active-tab">Privacy Policy</a>.</p>
+    </div>
+  </div>
+
+  <!-- Paystack inline -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+
+  <script src="sign.js" defer>
+  </script>
+</body>
+</html>

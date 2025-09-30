@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus leaders</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@preline/preline@2.0.0/dist/preline.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <base target="_self">
+   <link rel="stylesheet" href="main.css">
+   <link rel="shortcut icon" href="logo.png" type="image/x-icon">
+</head>
+<body class="bg-white text-gray-900 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200 fixed w-full z-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16 items-center">
+      <!-- LEFT: logo + links -->
+      <div class="flex items-center space-x-6">
+        <!-- Logo (replace src with your logo file) -->
+        <a href="index.html" class="flex items-center gap-3">
+          <img src="logo.png" alt="Campus Leaders logo" class="h-20 w-auto" />
+          
+        </a>
+
+        <!-- nav links (hidden on small screens) -->
+        <div class="hidden md:flex md:space-x-6">
+          <a href="index.html" data-section="dashboard" class="nav-item px-1 py-2 text-sm active-tab">Home</a>
+          <a href="signup.html" data-section="forum" class="nav-item px-1 py-2 text-sm">Profile</a>
+          <a href="" data-section="courses" class="nav-item px-1 py-2 text-sm">About Us</a>
+          <a href="" data-section="codelab" class="nav-item px-1 py-2 text-sm">Support</a>
+        </div>
+      </div>
+
+      <!-- CENTER / RIGHT: search + icons -->
+      <div class="flex items-center space-x-4">
+        <!-- Search (visible md and up) -->
+        <form action="" method="GET" class="hidden md:flex items-center w-80">
+          <label for="global-search" class="sr-only">Search</label>
+          <div class="relative flex-1">
+            <input id="global-search" name="q" type="search" placeholder="Search profile, members, posts..." 
+                   class="w-full bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:bg-two" />
+            <button type="submit" aria-label="Search" class="absolute right-1 top-1/2 transform -translate-y-1/2 p-2 rounded-full bghover">
+              <i class="fas fa-search text-gray-600"></i>
+            </button>
+          </div>
+        </form>
+
+        <!-- Mobile: search button toggles a small search bar -->
+        <button id="mobile-search-btn" class="md:hidden p-2 rounded-full bghover" aria-expanded="false" aria-controls="mobile-search">
+          <i class="fas fa-search"></i>
+        </button>
+
+        <!-- notification & messages -->
+        <button class="p-2 rounded-full bghover" aria-label="Notifications">
+          <i class="fas fa-bell"></i>
+        </button>
+        <button class="p-2 rounded-full bghover" aria-label="Messages">
+          <i class="fas fa-envelope"></i>
+        </button>
+
+        <!-- user menu -->
+       <div class="relative">
+  <button id="user-menu-button" class="flex items-center p-1 rounded-full focus:outline-none" aria-expanded="false" aria-haspopup="true" aria-controls="user-menu">
+    <div class="h-8 w-8 rounded-full bg-linear text-white flex items-center justify-center">
+      <i class="fas fa-user"></i>
+    </div>
+  </button>
+
+  <!-- added z-50 and kept hidden by default -->
+  <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md border border-gray-200 z-50" role="menu" aria-hidden="true">
+  
+    <a href="signup.html" class="block px-4 py-2 bghover" role="menuitem" tabindex="0">Sign up</a>
+  </div>
+</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile search overlay (hidden by default) -->
+  <div id="mobile-search" class="hidden md:hidden border-t border-gray-200 bg-white px-4 py-3">
+    <form action="/search" method="GET" class="flex items-center gap-2">
+      <label for="mobile-search-input" class="sr-only">Search</label>
+      <input id="mobile-search-input" name="q" type="search" placeholder="Search courses, members, posts..." 
+             class="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none" />
+      <button type="submit" aria-label="Search" class="p-2 rounded-full bghover">
+        <i class="fas fa-search"></i>
+      </button>
+      <button id="mobile-search-close" type="button" class="p-2 rounded-full bghover" aria-label="Close search">
+        <i class="fas fa-times"></i>
+      </button>
+    </form>
+  </div>
+</nav>
+
+
+
+    <main class="pt-20 pb-8">
+        <!-- Dashboard -->
+        <section id="dashboard" class="section active max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Left Sidebar -->
+                <div class="lg:col-span-1 space-y-6 ">
+                    <!-- Profile Card -->
+                    <div class="card bg-white p-6 border border-gray-200">
+                        <div class="flex flex-col items-center">
+                            <div class="h-20 w-20 rounded-full  bg-linear text-white flex items-center justify-center mb-3 text-2xl">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <h3 class="font-bold">Create Account/Login</h3>
+                            <a href="signup.html"><p class="text-sm  mb-4" style="color: var(--two);">Join Now</p></a>
+                            <div class="w-full border-t border-gray-200 pt-4">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <!-- <span class="text-gray-500">UNILAG 2019</span> -->
+                                    <span class="font-medium"></span>
+                                </div>
+                               
+                            </div>
+                        </div>
+                    </div>
+                    
+                  
+                </div>
+                
+                <!-- Main Content -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Create Post -->
+                    <div class="card bg-white p-4 border border-gray-200">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="h-10 w-10 rounded-full  bg-linear text-white flex items-center justify-center">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <button class="flex-1 text-left px-4 py-2 bg-gray-100 rounded-full text-gray-500">
+                                Start a post...
+                            </button>
+                        </div>
+                        <div class="flex justify-between">
+                            <button class="flex items-center text-sm text-gray-500 px-3 py-1 rounded bghover">
+                                <i class="fas fa-image text-blue-500 mr-2"></i> Photo
+                            </button>
+                            <button class="flex items-center text-sm text-gray-500 px-3 py-1 rounded bghover">
+                                <i class="fas fa-video text-green-500 mr-2"></i> Video
+                            </button>
+                            
+                            <button class="flex items-center text-sm text-gray-500 px-3 py-1 rounded bghover">
+                                <i class="fas fa-link text-orange-500 mr-2"></i> Link
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Feed -->
+                   <div class="card bg-white p-6 border border-gray-200">
+  <!-- header -->
+  <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+        <i class="fas fa-user"></i>
+      </div>
+      <div>
+        <h4 class="font-bold">UNICAL News Room</h4>
+        <p class="text-xs text-gray-500">Posted 2h ago • <i class="fas fa-globe-americas"></i></p>
+      </div>
+    </div>
+    <button class="text-gray-400 hover" aria-label="More options">
+      <i class="fas fa-ellipsis-h"></i>
+    </button>
+  </div>
+
+  <!-- image -->
+  <div class="mb-4">
+    <!-- Replace src with your image URL -->
+    <img src="https://explain.com.ng/wp-content/uploads/2020/06/WeChat-Image_20200607123937-1024x758.jpg" alt="News image" loading="lazy"
+         class="w-full h-48 sm:h-60 md:h-72 object-cover rounded-lg border border-gray-100" />
+  </div>
+
+  <!-- news heading (below image) -->
+  <h3 class="text-lg font-semibold mb-2">Major Breakthrough in Open Source Frameworks</h3>
+
+  <!-- news report -->
+  <p class="mb-3 text-sm text-gray-800">
+    Developers worldwide are celebrating a significant performance improvement introduced in the latest release.
+    The update reduces bundle size and improves server side rendering times across most popular deployments.
+  </p>
+
+  <!-- tags (below the news report) -->
+  <div class="flex flex-wrap gap-2 mb-4">
+    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#UNICAL</span>
+    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#Breakthrough</span>
+    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#Newsroom</span>
+  </div>
+
+
+
+  <!-- actions (like/comment/share) -->
+  <div class="flex justify-between text-sm text-gray-500 border-t border-b border-gray-200 py-2 mb-4">
+    <button class="flex items-center hover" aria-label="Like">
+      <i class="far fa-thumbs-up mr-1"></i> Like
+    </button>
+    <button class="flex items-center hover" aria-label="Comment">
+      <i class="far fa-comment mr-1"></i> Comment
+    </button>
+    <button class="flex items-center hover" aria-label="Share">
+      <i class="fas fa-share mr-1"></i> Share
+    </button>
+  </div>
+
+  <!-- comment input -->
+  <div class="flex items-center space-x-3">
+    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+      <i class="fas fa-user text-xs"></i>
+    </div>
+    <div class="flex-1 relative">
+      <input type="text" placeholder="Add a comment..." class="w-full bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none" />
+      <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover" aria-label="Add emoji">
+        <i class="far fa-smile"></i>
+      </button>
+    </div>
+  </div>
+</div>
+       <div class="card bg-white p-6 border border-gray-200">
+  <!-- header -->
+  <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center space-x-3">
+      <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+        <i class="fas fa-user"></i>
+      </div>
+      <div>
+        <h4 class="font-bold">UNICAL News Room</h4>
+        <p class="text-xs text-gray-500">Posted 2h ago • <i class="fas fa-globe-americas"></i></p>
+      </div>
+    </div>
+    <button class="text-gray-400 hover" aria-label="More options">
+      <i class="fas fa-ellipsis-h"></i>
+    </button>
+  </div>
+
+  <!-- image -->
+  <div class="mb-4">
+    <!-- Replace src with your image URL -->
+    <img src="https://explain.com.ng/wp-content/uploads/2020/06/WeChat-Image_20200607123937-1024x758.jpg" alt="News image" loading="lazy"
+         class="w-full h-48 sm:h-60 md:h-72 object-cover rounded-lg border border-gray-100" />
+  </div>
+
+  <!-- news heading (below image) -->
+  <h3 class="text-lg font-semibold mb-2">Major Breakthrough in Open Source Frameworks</h3>
+
+  <!-- news report -->
+  <p class="mb-3 text-sm text-gray-800">
+    Developers worldwide are celebrating a significant performance improvement introduced in the latest release.
+    The update reduces bundle size and improves server side rendering times across most popular deployments.
+  </p>
+
+  <!-- tags (below the news report) -->
+  <div class="flex flex-wrap gap-2 mb-4">
+    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#UNICAL</span>
+    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#Breakthrough</span>
+    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#Newsroom</span>
+  </div>
+
+
+
+  <!-- actions (like/comment/share) -->
+  <div class="flex justify-between text-sm text-gray-500 border-t border-b border-gray-200 py-2 mb-4">
+    <button class="flex items-center hover" aria-label="Like">
+      <i class="far fa-thumbs-up mr-1"></i> Like
+    </button>
+    <button class="flex items-center hover" aria-label="Comment">
+      <i class="far fa-comment mr-1"></i> Comment
+    </button>
+    <button class="flex items-center hover" aria-label="Share">
+      <i class="fas fa-share mr-1"></i> Share
+    </button>
+  </div>
+
+  <!-- comment input -->
+  <div class="flex items-center space-x-3">
+    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+      <i class="fas fa-user text-xs"></i>
+    </div>
+    <div class="flex-1 relative">
+      <input type="text" placeholder="Add a comment..." class="w-full bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none" />
+      <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover" aria-label="Add emoji">
+        <i class="far fa-smile"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+                    
+                    
+                </div>
+                
+                
+                 <div class="lg:col-span-1 space-y-6">
+                 
+                    
+                    <!-- Trending Discussions -->
+                    <div class="card bg-white p-6 border border-gray-200">
+                        <h3 class="font-bold mb-4">Trending News</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-medium text-sm mb-1">New SUG President to be ingurated in UNIJOS</h4>
+                                <p class="text-xs text-gray-500">142 comments • 24h</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-sm mb-1">VC Academics tset to retire.</h4>
+                                <p class="text-xs text-gray-500">87 comments • 1d</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-sm mb-1">Student's loan project put to a halt</h4>
+                                <p class="text-xs text-gray-500">63 comments • 2d</p>
+                            </div>
+                        </div>
+                        <!-- <button class="w-full mt-4 btn-primary py-2 rounded-full text-sm font-medium">View all</button> -->
+                    </div>
+                </div>
+            </div>
+            
+        </section>
+
+        <!-- Forum -->
+  
+
+ 
+
+   
+            
+      
+               
+   
+       
+
+  
+    </main>
+
+    <footer class="bg-gray-900 text-white  border-t border-gray-200 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="font-bold text-lg mb-4">Campus leaders</h3>
+                    <p class="text-sm  text-white">The  community for sharing, and growing together.</p>
+                </div>
+                <div>
+                    <h4 class="font-medium mb-3">Community</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-sm  text-white hover">Forum</a></li>
+                        <li><a href="#" class="text-sm  text-white hover">Events</a></li>
+                        <li><a href="#" class="text-sm  text-white hover">Meetups</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-medium mb-3">Resources</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-sm  text-white hover">Courses</a></li>
+                        <li><a href="#" class="text-sm  text-white hover">Documentation</a></li>
+                        <li><a href="#" class="text-sm  text-white hover">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-medium mb-3">Company</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-sm  text-white hover">About</a></li>
+                        <li><a href="#" class="text-sm  text-white hover">Careers</a></li>
+                        <li><a href="#" class="text-sm  text-white hover">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+              
+                <div class="flex space-x-4">
+                    <a href="#" class=" text-white hover"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class=" text-white hover"><i class="fab fa-github"></i></a>
+                    <a href="#" class=" text-white hover"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class=" text-white hover"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="main.js" defer> 
+    </script>
+</body>
+</html>
