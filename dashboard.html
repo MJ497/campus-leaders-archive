@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <base target="_self">
    <link rel="stylesheet" href="main.css">
+   <script src="https://unpkg.com/imagekit-javascript"></script>
+
   
    <!-- Firebase (compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -133,157 +135,10 @@
                                 Start a post...
                             </button>
                         </div>
-                        <div class="flex justify-between">
-                            <!-- <button class="flex items-center text-sm text-gray-500 px-3 py-1 rounded bghover">
-                                <i class="fas fa-image text-blue-500 mr-2"></i> Photo
-                            </button>
-                            <button class="flex items-center text-sm text-gray-500 px-3 py-1 rounded bghover">
-                                <i class="fas fa-video text-green-500 mr-2"></i> Video
-                            </button>
-                            
-                            <button class="flex items-center text-sm text-gray-500 px-3 py-1 rounded bghover">
-                                <i class="fas fa-link text-orange-500 mr-2"></i> Link
-                            </button> -->
-                        </div>
+                   
                     </div>
                     
-                    <!-- Feed -->
-                   <div class="card bg-white p-6 border border-gray-200">
-  <!-- header -->
-  <div class="flex items-center justify-between mb-4">
-    <div class="flex items-center space-x-3">
-      <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-        <i class="fas fa-user"></i>
-      </div>
-      <div>
-        <h4 class="font-bold">UNICAL News Room</h4>
-        <p class="text-xs text-gray-500">Posted 2h ago • <i class="fas fa-globe-americas"></i></p>
-      </div>
-    </div>
-    <button class="text-gray-400 hover" aria-label="More options">
-      <i class="fas fa-ellipsis-h"></i>
-    </button>
-  </div>
-
-  <!-- image -->
-  <div class="mb-4">
-    <!-- Replace src with your image URL -->
-    <img src="https://explain.com.ng/wp-content/uploads/2020/06/WeChat-Image_20200607123937-1024x758.jpg" alt="News image" loading="lazy"
-         class="w-full h-48 sm:h-60 md:h-72 object-cover rounded-lg border border-gray-100" />
-  </div>
-
-  <!-- news heading (below image) -->
-  <h3 class="text-lg font-semibold mb-2">Major Breakthrough in Open Source Frameworks</h3>
-
-  <!-- news report -->
-  <p class="mb-3 text-sm text-gray-800">
-    Developers worldwide are celebrating a significant performance improvement introduced in the latest release.
-    The update reduces bundle size and improves server side rendering times across most popular deployments.
-  </p>
-
-  <!-- tags (below the news report) -->
-  <div class="flex flex-wrap gap-2 mb-4">
-    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#UNICAL</span>
-    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#Breakthrough</span>
-    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#Newsroom</span>
-  </div>
-
-
-
-  <!-- actions (like/comment/share) -->
-  <div class="flex justify-between text-sm text-gray-500 border-t border-b border-gray-200 py-2 mb-4">
-    <button class="flex items-center hover" aria-label="Like">
-      <i class="far fa-thumbs-up mr-1"></i> Like
-    </button>
-    <button class="flex items-center hover" aria-label="Comment">
-      <i class="far fa-comment mr-1"></i> Comment
-    </button>
-    <button class="flex items-center hover" aria-label="Share">
-      <i class="fas fa-share mr-1"></i> Share
-    </button>
-  </div>
-
-  <!-- comment input -->
-  <div class="flex items-center space-x-3">
-    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-      <i class="fas fa-user text-xs"></i>
-    </div>
-    <div class="flex-1 relative">
-      <input type="text" placeholder="Add a comment..." class="w-full bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none" />
-      <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover" aria-label="Add emoji">
-        <i class="far fa-smile"></i>
-      </button>
-    </div>
-  </div>
-</div>
-       <div class="card bg-white p-6 border border-gray-200">
-  <!-- header -->
-  <div class="flex items-center justify-between mb-4">
-    <div class="flex items-center space-x-3">
-      <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-        <i class="fas fa-user"></i>
-      </div>
-      <div>
-        <h4 class="font-bold">UNICAL News Room</h4>
-        <p class="text-xs text-gray-500">Posted 2h ago • <i class="fas fa-globe-americas"></i></p>
-      </div>
-    </div>
-    <button class="text-gray-400 hover" aria-label="More options">
-      <i class="fas fa-ellipsis-h"></i>
-    </button>
-  </div>
-
-  <!-- image -->
-  <div class="mb-4">
-    <!-- Replace src with your image URL -->
-    <img src="https://explain.com.ng/wp-content/uploads/2020/06/WeChat-Image_20200607123937-1024x758.jpg" alt="News image" loading="lazy"
-         class="w-full h-48 sm:h-60 md:h-72 object-cover rounded-lg border border-gray-100" />
-  </div>
-
-  <!-- news heading (below image) -->
-  <h3 class="text-lg font-semibold mb-2">Major Breakthrough in Open Source Frameworks</h3>
-
-  <!-- news report -->
-  <p class="mb-3 text-sm text-gray-800">
-    Developers worldwide are celebrating a significant performance improvement introduced in the latest release.
-    The update reduces bundle size and improves server side rendering times across most popular deployments.
-  </p>
-
-  <!-- tags (below the news report) -->
-  <div class="flex flex-wrap gap-2 mb-4">
-    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#UNICAL</span>
-    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#Breakthrough</span>
-    <span class="text-xs px-2 py-1 bg-two text-white rounded-full">#Newsroom</span>
-  </div>
-
-
-
-  <!-- actions (like/comment/share) -->
-  <div class="flex justify-between text-sm text-gray-500 border-t border-b border-gray-200 py-2 mb-4">
-    <button class="flex items-center hover" aria-label="Like">
-      <i class="far fa-thumbs-up mr-1"></i> Like
-    </button>
-    <button class="flex items-center hover" aria-label="Comment">
-      <i class="far fa-comment mr-1"></i> Comment
-    </button>
-    <button class="flex items-center hover" aria-label="Share">
-      <i class="fas fa-share mr-1"></i> Share
-    </button>
-  </div>
-
-  <!-- comment input -->
-  <div class="flex items-center space-x-3">
-    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-      <i class="fas fa-user text-xs"></i>
-    </div>
-    <div class="flex-1 relative">
-      <input type="text" placeholder="Add a comment..." class="w-full bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none" />
-      <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover" aria-label="Add emoji">
-        <i class="far fa-smile"></i>
-      </button>
-    </div>
-  </div>
-</div>
+      
 
                     
                     

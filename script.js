@@ -11,7 +11,11 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "445360528951",
   appId: "1:445360528951:web:712da8859c8ac4cb6129b2"
 };
-const IMGUR_CLIENT_ID = "8b398f14462ad09"; // optional
+// IMAGEKIT settings (replaces Imgur)
+const IMAGEKIT_PUBLIC_KEY = "public_Yc+TmJvl4n8bSL8TprTA9AuF3Jg="; // optional (depends on upload mode)
+const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/9k31dyxjv"; // your ImageKit URL endpoint
+const IMAGEKIT_AUTH_ENDPOINT = ""; // optional: server endpoint that returns signature/token/expire for secure uploads
+
 const POSTS_COLLECTION = "posts";
 const POSTS_PAGE_LIMIT = 50;
 /* ============================ */
@@ -47,12 +51,12 @@ try {
 window.CampusLeaders = window.CampusLeaders || {};
 window.CampusLeaders.diagnose = async function diagnose() {
   console.log('Diagnosing connectivity: navigator.onLine=', navigator.onLine);
-  // minimal fetch test to Imgur (CORS may block full info but will show network failures)
+  // minimal fetch test to ImageKit endpoint (CORS may block full info but will show network failures)
   try {
     const t0 = performance.now();
-    await fetch('https://i.imgur.com/2AqQh0L.jpg', { method: 'HEAD', mode: 'no-cors' });
-    console.log('Imgur HEAD (opaque/no-cors) attempted — no CORS error means network OK; time:', Math.round(performance.now()-t0), 'ms');
-  } catch (e) { console.warn('Imgur HEAD failed (network/CORS):', e); }
+    await fetch((IMAGEKIT_URL_ENDPOINT || '/') , { method: 'HEAD', mode: 'no-cors' });
+    console.log('ImageKit HEAD (opaque/no-cors) attempted — no CORS error means network OK; time:', Math.round(performance.now()-t0), 'ms');
+  } catch (e) { console.warn('ImageKit HEAD failed (network/CORS):', e); }
   // Firestore raw endpoint reachability test (may be blocked by CORS in browser) — useful to detect network-level blocks
   try {
     const url = 'https://firestore.googleapis.com/v1/projects/' + (FIREBASE_CONFIG.projectId || ''); 
@@ -138,20 +142,19 @@ function showOfflineBanner() {
 }
 window.addEventListener('offline', showOfflineBanner);
 
-// Image robust loader helper: normalize Imgur links and auto-retry if an image fails to load.
+// Image robust loader helper: normalize ImageKit links and auto-retry if an image fails to load.
 function makeImgElement(src, cls = '') {
   const img = document.createElement('img');
   img.className = cls;
   img.loading = 'lazy';
-  let finalSrc = normalizeImgurUrl ? normalizeImgurUrl(src) : src;
+  let finalSrc = normalizeImageUrl ? normalizeImageUrl(src) : src;
   img.src = finalSrc;
   // onerror fallback: try alternate extension (.jpg/.png) or fallback placeholder
   img.onerror = function() {
     console.warn('Image failed to load:', finalSrc);
-    // try swapping extension if it looks like imgur id without ext
-    const m = finalSrc.match(/i\.imgur\.com\/([A-Za-z0-9]+)(\.[a-z]+)?$/i);
-    if (m && m[1] && !m[2]) {
-      this.src = `https://i.imgur.com/${m[1]}.jpg`;
+    // try adding .jpg if there's no extension
+    if (!/\.[a-z0-9]{2,5}($|\?)/i.test(finalSrc)) {
+      this.src = finalSrc + '.jpg';
       return;
     }
     // final fallback: small transparent dataURI or placeholder
@@ -160,15 +163,22 @@ function makeImgElement(src, cls = '') {
   return img;
 }
 
-// small normalizeImgurUrl helper (re-usable)
-function normalizeImgurUrl(url) {
-  if (!url) return url;
-  const u = url.trim();
-  if (/^https?:\/\/i\.imgur\.com\//i.test(u)) return u;
-  // convert imgur page or gallery id to direct i.imgur link (jpg)
-  const m = u.match(/imgur\.com\/(?:a\/|gallery\/)?([A-Za-z0-9]+)/i);
-  if (m && m[1]) return `https://i.imgur.com/${m[1]}.jpg`;
-  return u;
+// normalizeImageUrl helper (re-usable)
+// keeps direct URLs as-is. If you want to rewrite short paths to your ImageKit endpoint, do it here.
+// Example: normalize "uploads/my.jpg" -> `${IMAGEKIT_URL_ENDPOINT}/uploads/my.jpg`
+function normalizeImageUrl(url) {
+  try {
+    if (!url) return url;
+    const u = url.trim();
+    // If it's already an ImageKit URL, return directly
+    if (IMAGEKIT_URL_ENDPOINT && u.indexOf(IMAGEKIT_URL_ENDPOINT) === 0) return u;
+    // If it's a relative path (no protocol) and user has IMAGEKIT_URL_ENDPOINT, prepend the endpoint
+    if (IMAGEKIT_URL_ENDPOINT && !/^https?:\/\//i.test(u) && u[0] !== '/') {
+      return `${IMAGEKIT_URL_ENDPOINT}/${u}`;
+    }
+    // Fallback: return original URL (handles existing ImageKit or other CDN links)
+    return u;
+  } catch (e) { return url; }
 }
 
 // Example usage: replace your existing attach call with:
@@ -220,7 +230,7 @@ function setSidebarProfile(userDoc, firebaseUser) {
       // replace contents with <img> to preserve layout
       avatarContainer.innerHTML = '';
       const img = document.createElement('img');
-      img.src = normalizeImgurUrl(src);
+      img.src = normalizeImageUrl(src);
       img.alt = (nameEl?.textContent || 'avatar');
       img.className = 'h-20 w-20 rounded-full object-cover';
       img.loading = 'lazy';
@@ -228,24 +238,6 @@ function setSidebarProfile(userDoc, firebaseUser) {
       avatarContainer.appendChild(img);
     }
   }
-}
-
-// normalize Imgur-ish links a little: if someone saved a page URL (imgur.com/abc) try i.imgur.com/abc.jpg
-function normalizeImgurUrl(url) {
-  try {
-    if (!url) return url;
-    const u = url.trim();
-    if (/^https?:\/\/i\.imgur\.com\//i.test(u)) return u; // already direct
-    // if it's an imgur page (not i.imgur) and no extension, convert to i.imgur + .jpg
-    if (/imgur\.com\/(a\/|gallery\/)?([A-Za-z0-9]+)/i.test(u) && !/\.(jpe?g|png|gif|gifv|webp|mp4)$/i.test(u)) {
-      const m = u.match(/imgur\.com\/(?:a\/|gallery\/)?([A-Za-z0-9]+)/i);
-      if (m && m[1]) {
-        return `https://i.imgur.com/${m[1]}.jpg`;
-      }
-    }
-    // otherwise return as-is (hopefully direct link)
-    return u;
-  } catch (e) { return url; }
 }
 
 // fetch Firestore user doc cached
@@ -299,7 +291,7 @@ async function populateAuthorInPostElement(wrapperEl, post) {
       img.className = 'h-10 w-10 rounded-full object-cover';
       img.alt = authorName;
       img.loading = 'lazy';
-      if (photo) img.src = normalizeImgurUrl(photo);
+      if (photo) img.src = normalizeImageUrl(photo);
       else img.src = ''; // keep blank — could use placeholder
       avatarDiv.appendChild(img);
     }
@@ -486,7 +478,7 @@ if (userMenuButton && userMenu) {
         } else {
           // clear tokens/local session if any
           localStorage.removeItem("auth_token");
-          window.location.reload();
+          window.location.href = "/index.html";
         }
       });
     }
@@ -504,19 +496,92 @@ postsContainer.className = "lg:col-span-2 space-y-6";
   else insertionNode.appendChild(postsContainer);
 })();
 
-/* --------------- helper: upload to Imgur (optional) --------------- */
-async function uploadToImgur(file) {
-  if (!IMGUR_CLIENT_ID) throw new Error("Imgur client id not set");
-  const form = new FormData(); form.append("image", file);
-  const resp = await fetch("https://api.imgur.com/3/image", {
-    method: "POST",
-    headers: { Authorization: `Client-ID ${IMGUR_CLIENT_ID}` },
-    body: form
-  });
-  const data = await resp.json();
-  if (!resp.ok) throw new Error(data.data?.error || "Imgur upload failed");
-  return data.data.link;
+/* --------------- helper: upload to ImageKit (optional) --------------- */
+// - If ImageKit JS SDK (window.imagekit) is available, it will be used and it will handle authEndpoint if configured.
+// - If IMAGEKIT_AUTH_ENDPOINT is set, this will request signature from your server and perform signed upload.
+// - Otherwise it will attempt an unsigned upload with publicKey (may be blocked by your ImageKit account settings).
+/* --------------- uploadToImageKit (robust, logs + normalizes response) --------------- */
+async function uploadToImageKit(file) {
+  if (!IMAGEKIT_URL_ENDPOINT) throw new Error("ImageKit URL endpoint not set (IMAGEKIT_URL_ENDPOINT).");
+
+  console.log('uploadToImageKit: starting upload', file && file.name);
+
+  // Helper to build full url if server returns filePath
+  const buildFromFilePath = (filePath) => {
+    if (!filePath) return null;
+    const base = IMAGEKIT_URL_ENDPOINT.replace(/\/+$/, '');
+    if (filePath.startsWith('/')) return base + filePath;
+    return base + '/' + filePath;
+  };
+
+  // Use ImageKit JS SDK if present (preferred)
+  if (window.imagekit && typeof window.imagekit.upload === 'function') {
+    return new Promise((resolve, reject) => {
+      const filename = file.name || `upload_${Date.now()}`;
+      window.imagekit.upload({ file, fileName: filename }, function(err, result) {
+        if (err) {
+          console.error('ImageKit SDK upload error', err);
+          return reject(err);
+        }
+        console.log('ImageKit SDK upload result', result);
+        // result may contain url or response.url or filePath
+        const url = result?.url || result?.response?.url || buildFromFilePath(result?.filePath) || result?.filePath;
+        if (!url) return reject(new Error('No URL returned from ImageKit SDK upload'));
+        resolve(url);
+      });
+    });
+  }
+
+  // If you have a server endpoint that returns signature/token/expire (recommended), use it:
+  if (IMAGEKIT_AUTH_ENDPOINT) {
+    try {
+      const filename = file.name || `upload_${Date.now()}`;
+      const sigResp = await fetch(IMAGEKIT_AUTH_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: filename })
+      });
+      const sig = await sigResp.json();
+      console.log('ImageKit auth endpoint response', sig);
+      if (!sigResp.ok) throw new Error('Failed to obtain ImageKit signature from server.');
+
+      const form = new FormData();
+      form.append('file', file);
+      form.append('fileName', filename);
+      form.append('publicKey', IMAGEKIT_PUBLIC_KEY || '');
+      if (sig.signature) form.append('signature', sig.signature);
+      if (sig.token) form.append('token', sig.token);
+      if (sig.expire) form.append('expire', sig.expire);
+      if (sig.folder) form.append('folder', sig.folder);
+
+      const resp = await fetch('https://upload.imagekit.io/api/v1/files/upload', { method: 'POST', body: form });
+      const data = await resp.json();
+      console.log('ImageKit signed upload response', resp.status, data);
+      if (!resp.ok) throw new Error(data.message || 'ImageKit signed upload failed');
+      return data.url || buildFromFilePath(data.filePath) || (IMAGEKIT_URL_ENDPOINT.replace(/\/$/,'') + '/' + (data.name || ''));
+    } catch (e) {
+      console.error('Signed ImageKit upload failed', e);
+      throw e;
+    }
+  }
+
+  // Unsigned/publicKey upload (last resort)
+  try {
+    const fData = new FormData();
+    fData.append('file', file);
+    fData.append('fileName', file.name || `upload_${Date.now()}`);
+    if (IMAGEKIT_PUBLIC_KEY) fData.append('publicKey', IMAGEKIT_PUBLIC_KEY);
+    const resp2 = await fetch('https://upload.imagekit.io/api/v1/files/upload', { method: 'POST', body: fData });
+    const d2 = await resp2.json();
+    console.log('ImageKit unsigned upload response', resp2.status, d2);
+    if (!resp2.ok) throw new Error(d2.message || 'ImageKit unsigned upload failed');
+    return d2.url || buildFromFilePath(d2.filePath) || (IMAGEKIT_URL_ENDPOINT.replace(/\/$/,'') + '/' + (d2.name || ''));
+  } catch (err) {
+    console.error('uploadToImageKit (unsigned) failed', err);
+    throw err;
+  }
 }
+
 
 /* ---------------- render post with avatar, counts, like/comment/share interactions ---------------- */
 function renderPost(postDoc) {
@@ -827,15 +892,48 @@ composerSubmitBtn.addEventListener("click", async (ev) => {
   showSmallOverlay("Posting...");
 
   // upload image if present
+  // upload image if present
   let imageUrl = null;
   if (file) {
     try {
-      if (IMGUR_CLIENT_ID) imageUrl = await uploadToImgur(file);
-      else console.warn("Imgur not configured; skipping image upload.");
+      if (IMAGEKIT_URL_ENDPOINT) {
+        const uploaded = await uploadToImageKit(file);
+        console.log('uploadToImageKit returned:', uploaded);
+        // uploaded might already be a string URL, or occasionally an object — normalize:
+        if (typeof uploaded === 'string' && uploaded.trim()) {
+          imageUrl = uploaded;
+        } else if (uploaded && typeof uploaded === 'object') {
+          imageUrl = uploaded.url || uploaded.filePath ? (IMAGEKIT_URL_ENDPOINT.replace(/\/$/,'') + (uploaded.filePath && !uploaded.filePath.startsWith('/') ? '/' + uploaded.filePath : (uploaded.filePath || ''))) : null;
+        }
+        if (!imageUrl) console.warn('ImageKit upload returned no usable URL', uploaded);
+      } else {
+        console.warn("ImageKit not configured; skipping image upload.");
+      }
     } catch (err) {
       console.warn("Image upload failed:", err);
     }
   }
+
+async function fetchImageKitSignatureFromServer(fileName = `upload_${Date.now()}`) {
+  if (!firebase || !firebase.auth) throw new Error('Firebase not available');
+  const user = firebase.auth().currentUser;
+  if (!user) throw new Error('Not signed in');
+  const idToken = await user.getIdToken();
+
+  const resp = await fetch('https://campus-leaders-archive-git-main-macjohnsons-projects.vercel.app/imagekit-auth', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + idToken
+    },
+    body: JSON.stringify({ fileName })
+  });
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error('Auth endpoint failed: ' + resp.status + ' — ' + txt);
+  }
+  return resp.json(); // { token, expire, signature }
+}
 
   const newPost = {
     title: title || null,
