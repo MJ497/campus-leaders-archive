@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profile — Campus leaders</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@preline/preline@2.0.0/dist/preline.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <base target="_self">
+  <link rel="stylesheet" href="main.css">
+  <link rel="shortcut icon" href="logo.png" type="image/x-icon">
+
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+</head>
+<body class="bg-white text-gray-900 min-h-screen">
+
+  <!-- Navigation (matches your dashboard) -->
+  <nav class="bg-white border-b border-gray-200 fixed w-full z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex items-center space-x-6">
+          <a href="index.html" class="flex items-center gap-3">
+            <img src="logo.png" alt="Campus Leaders logo" class="h-20 w-auto" />
+          </a>
+          <div class="hidden md:flex md:space-x-6">
+            <a href="dashboard.html" class="nav-item px-1 py-2 text-sm">Home</a>
+            <a href="profile.html" class="nav-item px-1 py-2 text-sm active-tab font-semibold">Profile</a>
+            <a href="about.html" class="nav-item px-1 py-2 text-sm">About Us</a>
+            <a href="#" class="nav-item px-1 py-2 text-sm">Support</a>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+          <form action="" method="GET" class="hidden md:flex items-center w-80">
+            <div class="relative flex-1">
+              <input id="global-search" name="q" type="search" placeholder="Search profile, members, posts..."
+                     class="w-full bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none" />
+              <button type="submit" aria-label="Search" class="absolute right-1 top-1/2 transform -translate-y-1/2 p-2 rounded-full bghover">
+                <i class="fas fa-search text-gray-600"></i>
+              </button>
+            </div>
+          </form>
+
+          <button id="mobile-search-btn" class="md:hidden p-2 rounded-full bghover" aria-expanded="false" aria-controls="mobile-search">
+            <i class="fas fa-search"></i>
+          </button>
+
+          <div class="relative">
+            <button id="user-menu-button" class="flex items-center p-1 rounded-full focus:outline-none" aria-expanded="false" aria-haspopup="true">
+              <div id="nav-avatar" class="h-8 w-8 rounded-full bg-linear text-white flex items-center justify-center">
+                <i class="fas fa-user"></i>
+              </div>
+            </button>
+
+            <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md border border-gray-200" role="menu" aria-hidden="true">
+              <a href="profile.html" class="block px-4 py-2 bghover" role="menuitem">Profile</a>
+              <a id="sign-out" href="#" class="block px-4 py-2 bghover" role="menuitem">Sign Out</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div id="mobile-search" class="hidden md:hidden border-t border-gray-200 bg-white px-4 py-3">
+      <form action="/search" method="GET" class="flex items-center gap-2">
+        <input id="mobile-search-input" name="q" type="search" placeholder="Search courses, members, posts..."
+               class="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none" />
+        <button type="submit" aria-label="Search" class="p-2 rounded-full bghover"><i class="fas fa-search"></i></button>
+        <button id="mobile-search-close" type="button" class="p-2 rounded-full bghover"><i class="fas fa-times"></i></button>
+      </form>
+    </div>
+  </nav>
+
+  <main class="pt-20 pb-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+      <!-- Left: Profile card -->
+      <aside class="lg:col-span-1 space-y-6">
+        <div class="card bg-white p-6 border border-gray-200">
+          <div class="flex flex-col items-center">
+            <div id="profile-avatar" class="h-20 w-20 rounded-full bg-linear text-white flex items-center justify-center mb-3 overflow-hidden">
+              <i class="fas fa-user text-2xl"></i>
+            </div>
+            <h3 id="profile-fullname" class="font-bold">Member</h3>
+            <p id="profile-position" class="text-sm text-gray-500 mb-4"></p>
+
+            <div class="w-full border-t border-gray-200 pt-4">
+              <div class="flex justify-between text-sm mb-2">
+                <span id="profile-school" class="text-gray-500"></span>
+                <span id="profile-year" class="font-medium"></span>
+              </div>
+              <div class="text-xs text-gray-500">
+                <div id="profile-assoc"></div>
+                <div id="profile-state"></div>
+              </div>
+            </div>
+
+            <div class="mt-4 flex gap-2 w-full justify-center">
+              <button id="edit-profile-btn" class="px-4 py-2 rounded-full bg-two text-white text-sm">Edit Profile</button>
+              <button id="download-json" class="px-4 py-2 rounded-full border border-gray-200 text-sm">Download</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main content: details -->
+      <section class="lg:col-span-2 space-y-6">
+        <div class="card bg-white p-6 border border-gray-200">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h2 class="text-xl font-semibold">Profile</h2>
+              <p class="text-sm text-gray-500">Your public profile details — editable and downloadable.</p>
+            </div>
+            <div>
+              <button id="download-vcard" class="px-3 py-1 rounded bghover text-sm border border-gray-200">Export vCard</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs text-gray-500">First name</label>
+              <div id="firstName" class="mt-1 font-medium">—</div>
+            </div>
+
+            <div>
+              <label class="text-xs text-gray-500">Last name</label>
+              <div id="lastName" class="mt-1 font-medium">—</div>
+            </div>
+
+            <div>
+              <label class="text-xs text-gray-500">Email</label>
+              <div id="email" class="mt-1 text-sm text-gray-700">—</div>
+            </div>
+
+            <div>
+              <label class="text-xs text-gray-500">Phone</label>
+              <div id="phone" class="mt-1 text-sm text-gray-700">—</div>
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="text-xs text-gray-500">Bio</label>
+              <div id="bio" class="mt-1 text-sm text-gray-700 whitespace-pre-wrap">—</div>
+            </div>
+
+            <div>
+              <label class="text-xs text-gray-500">Association</label>
+              <div id="association" class="mt-1 text-sm text-gray-700">—</div>
+            </div>
+
+            <div>
+              <label class="text-xs text-gray-500">State</label>
+              <div id="state" class="mt-1 text-sm text-gray-700">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity / placeholders -->
+        <div class="card bg-white p-6 border border-gray-200">
+          <h3 class="font-bold mb-3">Activity</h3>
+          <p class="text-sm text-gray-500">Recent posts and activity would appear here (you can wire this to your posts collection).</p>
+        </div>
+      </section>
+
+      <!-- Right column: quick links -->
+      <aside class="lg:col-span-1 space-y-6">
+        <div class="card bg-white p-6 border border-gray-200">
+          <h3 class="font-bold mb-4">Account</h3>
+          <ul class="space-y-3">
+            <!-- <li><a href="#" id="go-dashboard" class="text-sm text-gray-700 hover">Dashboard</a></li> -->
+            <li><a href="#" id="manage-security" class="text-sm text-gray-700 hover">Security</a></li>
+            <li><a href="#" id="help-support" class="text-sm text-gray-700 hover">Help & Support</a></li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="bg-gray-900 text-white border-t border-gray-200 py-8 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="font-bold text-lg mb-4">Campus leaders</h3>
+          <p class="text-sm text-white">The community for sharing, and growing together.</p>
+        </div>
+        <div>
+          <h4 class="font-medium mb-3">Community</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-white hover">Forum</a></li>
+            <li><a href="#" class="text-sm text-white hover">Events</a></li>
+            <li><a href="#" class="text-sm text-white hover">Meetups</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium mb-3">Resources</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-white hover">Courses</a></li>
+            <li><a href="#" class="text-sm text-white hover">Documentation</a></li>
+            <li><a href="#" class="text-sm text-white hover">Blog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-medium mb-3">Company</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-white hover">About</a></li>
+            <li><a href="#" class="text-sm text-white hover">Careers</a></li>
+            <li><a href="#" class="text-sm text-white hover">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+        <div class="flex space-x-4">
+          <a href="#" class="text-white hover"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="text-white hover"><i class="fab fa-github"></i></a>
+          <a href="#" class="text-white hover"><i class="fab fa-linkedin"></i></a>
+          <a href="#" class="text-white hover"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Edit profile modal (hidden initially) -->
+  <div id="edit-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black opacity-40"></div>
+    <div class="relative w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 z-10 overflow-auto max-h-[90vh]">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-lg">Edit profile</h3>
+        <button id="close-edit" class="px-3 py-1 rounded bghover">Close</button>
+      </div>
+
+      <form id="edit-form" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-gray-500">First name</label>
+            <input id="input-firstName" class="w-full mt-1 border rounded px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="text-xs text-gray-500">Last name</label>
+            <input id="input-lastName" class="w-full mt-1 border rounded px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="text-xs text-gray-500">Position</label>
+            <input id="input-position" class="w-full mt-1 border rounded px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="text-xs text-gray-500">Phone</label>
+            <input id="input-phone" class="w-full mt-1 border rounded px-3 py-2 text-sm" />
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs text-gray-500">Email (cannot change here)</label>
+          <input id="input-email" disabled class="w-full mt-1 border rounded px-3 py-2 text-sm bg-gray-100" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-gray-500">School</label>
+            <input id="input-schoolName" class="w-full mt-1 border rounded px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="text-xs text-gray-500">Year</label>
+            <input id="input-yearHeld" class="w-full mt-1 border rounded px-3 py-2 text-sm" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-gray-500">Association</label>
+            <input id="input-association" class="w-full mt-1 border rounded px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="text-xs text-gray-500">State</label>
+            <input id="input-stateName" class="w-full mt-1 border rounded px-3 py-2 text-sm" />
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs text-gray-500">Bio</label>
+          <textarea id="input-bio" class="w-full mt-1 border rounded px-3 py-2 text-sm" rows="4"></textarea>
+        </div>
+
+        <div>
+          <label class="text-xs text-gray-500">Profile image</label>
+          <div class="mt-2 flex items-center gap-3">
+            <input id="input-image" type="file" accept="image/*" />
+            <div id="input-image-name" class="text-xs text-gray-500"></div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3">
+          <button id="save-profile" type="button" class="px-4 py-2 rounded bg-two text-white">Save</button>
+          <button id="cancel-edit" type="button" class="px-4 py-2 rounded border">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- small overlay / toast -->
+  <div id="toast" class="fixed right-6 bottom-6 z-50 hidden rounded px-4 py-2 text-white"></div>
+
+  <!-- Script: profile logic (inlined) -->
+ <script src="profile.js" defer></script>
+</body>
+</html>

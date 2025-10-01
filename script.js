@@ -1,4 +1,4 @@
-// script.js (updated — replace your current script.js with this file)
+// script.js (updated — Uploadcare support)
 // Requires: Firebase compat SDKs already included in the page (you have them).
 // Assumes Firestore collections: posts, users, payments (optional).
 
@@ -11,10 +11,10 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "445360528951",
   appId: "1:445360528951:web:712da8859c8ac4cb6129b2"
 };
-// IMAGEKIT settings (replaces Imgur)
-const IMAGEKIT_PUBLIC_KEY = "public_Yc+TmJvl4n8bSL8TprTA9AuF3Jg="; // optional (depends on upload mode)
-const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/9k31dyxjv"; // your ImageKit URL endpoint
-const IMAGEKIT_AUTH_ENDPOINT = "https://your-vercel-app.vercel.app/imagekit-auth";// optional: server endpoint that returns signature/token/expire for secure uploads
+// UPLOADCARE settings (replaces ImageKit)
+const UPLOADCARE_PUBLIC_KEY = "2683b7806064b3db73e3"; // <-- replace with your Uploadcare public key
+const UPLOADCARE_BASE_UPLOAD = "https://upload.uploadcare.com/base/"; // REST upload endpoint
+const UPLOADCARE_CDN = "https://12hsb3bgrj.ucarecd.net/"; // CDN base for uploaded files
 
 const POSTS_COLLECTION = "posts";
 const POSTS_PAGE_LIMIT = 50;
@@ -51,12 +51,12 @@ try {
 window.CampusLeaders = window.CampusLeaders || {};
 window.CampusLeaders.diagnose = async function diagnose() {
   console.log('Diagnosing connectivity: navigator.onLine=', navigator.onLine);
-  // minimal fetch test to ImageKit endpoint (CORS may block full info but will show network failures)
+  // minimal fetch test to Uploadcare CDN (CORS may block full info but will show network failures)
   try {
     const t0 = performance.now();
-    await fetch((IMAGEKIT_URL_ENDPOINT || '/') , { method: 'HEAD', mode: 'no-cors' });
-    console.log('ImageKit HEAD (opaque/no-cors) attempted — no CORS error means network OK; time:', Math.round(performance.now()-t0), 'ms');
-  } catch (e) { console.warn('ImageKit HEAD failed (network/CORS):', e); }
+    await fetch((UPLOADCARE_CDN || '/'), { method: 'HEAD', mode: 'no-cors' });
+    console.log('Uploadcare CDN HEAD (opaque/no-cors) attempted — no CORS error means network OK; time:', Math.round(performance.now()-t0), 'ms');
+  } catch (e) { console.warn('Uploadcare HEAD failed (network/CORS):', e); }
   // Firestore raw endpoint reachability test (may be blocked by CORS in browser) — useful to detect network-level blocks
   try {
     const url = 'https://firestore.googleapis.com/v1/projects/' + (FIREBASE_CONFIG.projectId || ''); 
@@ -142,7 +142,7 @@ function showOfflineBanner() {
 }
 window.addEventListener('offline', showOfflineBanner);
 
-// Image robust loader helper: normalize ImageKit links and auto-retry if an image fails to load.
+// Image robust loader helper: normalize Uploadcare links and auto-retry if an image fails to load.
 function makeImgElement(src, cls = '') {
   const img = document.createElement('img');
   img.className = cls;
@@ -164,19 +164,21 @@ function makeImgElement(src, cls = '') {
 }
 
 // normalizeImageUrl helper (re-usable)
-// keeps direct URLs as-is. If you want to rewrite short paths to your ImageKit endpoint, do it here.
-// Example: normalize "uploads/my.jpg" -> `${IMAGEKIT_URL_ENDPOINT}/uploads/my.jpg`
+// If URL is already a full URL, leave it. If it's an Uploadcare file id (uuid-like) or a relative path, prepend CDN.
 function normalizeImageUrl(url) {
   try {
     if (!url) return url;
     const u = url.trim();
-    // If it's already an ImageKit URL, return directly
-    if (IMAGEKIT_URL_ENDPOINT && u.indexOf(IMAGEKIT_URL_ENDPOINT) === 0) return u;
-    // If it's a relative path (no protocol) and user has IMAGEKIT_URL_ENDPOINT, prepend the endpoint
-    if (IMAGEKIT_URL_ENDPOINT && !/^https?:\/\//i.test(u) && u[0] !== '/') {
-      return `${IMAGEKIT_URL_ENDPOINT}/${u}`;
+    // if it's already an Uploadcare CDN URL return as-is
+    if (UPLOADCARE_CDN && u.indexOf(UPLOADCARE_CDN) === 0) return u;
+    // if it's a full HTTP/HTTPS URL, return as-is
+    if (/^https?:\/\//i.test(u)) return u;
+    // if it's a simple uuid or path (no protocol), prepend CDN
+    if (UPLOADCARE_CDN) {
+      // strip leading slashes
+      const filePart = u.replace(/^\/+/, '');
+      return `${UPLOADCARE_CDN}/${filePart}`;
     }
-    // Fallback: return original URL (handles existing ImageKit or other CDN links)
     return u;
   } catch (e) { return url; }
 }
@@ -496,92 +498,44 @@ postsContainer.className = "lg:col-span-2 space-y-6";
   else insertionNode.appendChild(postsContainer);
 })();
 
-/* --------------- helper: upload to ImageKit (optional) --------------- */
-// - If ImageKit JS SDK (window.imagekit) is available, it will be used and it will handle authEndpoint if configured.
-// - If IMAGEKIT_AUTH_ENDPOINT is set, this will request signature from your server and perform signed upload.
-// - Otherwise it will attempt an unsigned upload with publicKey (may be blocked by your ImageKit account settings).
-/* --------------- uploadToImageKit (robust, logs + normalizes response) --------------- */
-async function uploadToImageKit(file) {
-  if (!IMAGEKIT_URL_ENDPOINT) throw new Error("ImageKit URL endpoint not set (IMAGEKIT_URL_ENDPOINT).");
+/* --------------- helper: upload to Uploadcare (optional) --------------- */
+// - Uses Uploadcare REST unsigned upload with public key. Sets UPLOADCARE_STORE=1 so file is stored and served from CDN.
+// - If you prefer Uploadcare widget, you can include their widget script and adapt to use it instead.
+async function uploadToUploadcare(file) {
+  if (!UPLOADCARE_PUBLIC_KEY) throw new Error("Uploadcare public key not set (UPLOADCARE_PUBLIC_KEY).");
+  console.log('uploadToUploadcare: starting upload', file && file.name);
 
-  console.log('uploadToImageKit: starting upload', file && file.name);
-
-  // Helper to build full url if server returns filePath
-  const buildFromFilePath = (filePath) => {
-    if (!filePath) return null;
-    const base = IMAGEKIT_URL_ENDPOINT.replace(/\/+$/, '');
-    if (filePath.startsWith('/')) return base + filePath;
-    return base + '/' + filePath;
-  };
-
-  // Use ImageKit JS SDK if present (preferred)
-  if (window.imagekit && typeof window.imagekit.upload === 'function') {
-    return new Promise((resolve, reject) => {
-      const filename = file.name || `upload_${Date.now()}`;
-      window.imagekit.upload({ file, fileName: filename }, function(err, result) {
-        if (err) {
-          console.error('ImageKit SDK upload error', err);
-          return reject(err);
-        }
-        console.log('ImageKit SDK upload result', result);
-        // result may contain url or response.url or filePath
-        const url = result?.url || result?.response?.url || buildFromFilePath(result?.filePath) || result?.filePath;
-        if (!url) return reject(new Error('No URL returned from ImageKit SDK upload'));
-        resolve(url);
-      });
-    });
-  }
-
-  // If you have a server endpoint that returns signature/token/expire (recommended), use it:
-  if (IMAGEKIT_AUTH_ENDPOINT) {
-    try {
-      const filename = file.name || `upload_${Date.now()}`;
-      const sigResp = await fetch(IMAGEKIT_AUTH_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileName: filename })
-      });
-      const sig = await sigResp.json();
-      console.log('ImageKit auth endpoint response', sig);
-      if (!sigResp.ok) throw new Error('Failed to obtain ImageKit signature from server.');
-
-      const form = new FormData();
-      form.append('file', file);
-      form.append('fileName', filename);
-      form.append('publicKey', IMAGEKIT_PUBLIC_KEY || '');
-      if (sig.signature) form.append('signature', sig.signature);
-      if (sig.token) form.append('token', sig.token);
-      if (sig.expire) form.append('expire', sig.expire);
-      if (sig.folder) form.append('folder', sig.folder);
-
-      const resp = await fetch('https://upload.imagekit.io/api/v1/files/upload', { method: 'POST', body: form });
-      const data = await resp.json();
-      console.log('ImageKit signed upload response', resp.status, data);
-      if (!resp.ok) throw new Error(data.message || 'ImageKit signed upload failed');
-      return data.url || buildFromFilePath(data.filePath) || (IMAGEKIT_URL_ENDPOINT.replace(/\/$/,'') + '/' + (data.name || ''));
-    } catch (e) {
-      console.error('Signed ImageKit upload failed', e);
-      throw e;
-    }
-  }
-
-  // Unsigned/publicKey upload (last resort)
   try {
-    const fData = new FormData();
-    fData.append('file', file);
-    fData.append('fileName', file.name || `upload_${Date.now()}`);
-    if (IMAGEKIT_PUBLIC_KEY) fData.append('publicKey', IMAGEKIT_PUBLIC_KEY);
-    const resp2 = await fetch('https://upload.imagekit.io/api/v1/files/upload', { method: 'POST', body: fData });
-    const d2 = await resp2.json();
-    console.log('ImageKit unsigned upload response', resp2.status, d2);
-    if (!resp2.ok) throw new Error(d2.message || 'ImageKit unsigned upload failed');
-    return d2.url || buildFromFilePath(d2.filePath) || (IMAGEKIT_URL_ENDPOINT.replace(/\/$/,'') + '/' + (d2.name || ''));
+    const form = new FormData();
+    form.append('file', file);
+    form.append('UPLOADCARE_PUB_KEY', UPLOADCARE_PUBLIC_KEY);
+    form.append('UPLOADCARE_STORE', '1'); // store and make available on CDN
+
+    const resp = await fetch(UPLOADCARE_BASE_UPLOAD, {
+      method: 'POST',
+      body: form
+    });
+
+    const data = await resp.json();
+    console.log('Uploadcare upload response', resp.status, data);
+    if (!resp.ok) {
+      // try to invert to readable message
+      const msg = data?.error?.message || data?.detail || data?.message || JSON.stringify(data);
+      throw new Error('Uploadcare upload failed: ' + msg);
+    }
+
+    // data.file contains the file UUID or path. Build CDN url.
+    // example: data.file = "3f6d4b8b-.../" or "3f6d4b8b-..."
+    const fileId = (data && data.file) ? String(data.file).replace(/^\/+|\/+$/g, '') : null;
+    if (!fileId) throw new Error('Uploadcare did not return file id');
+
+    const cdnUrl = `${UPLOADCARE_CDN}/${fileId}/`;
+    return cdnUrl;
   } catch (err) {
-    console.error('uploadToImageKit (unsigned) failed', err);
+    console.error('uploadToUploadcare failed', err);
     throw err;
   }
 }
-
 
 /* ---------------- render post with avatar, counts, like/comment/share interactions ---------------- */
 function renderPost(postDoc) {
@@ -892,48 +846,23 @@ composerSubmitBtn.addEventListener("click", async (ev) => {
   showSmallOverlay("Posting...");
 
   // upload image if present
-  // upload image if present
   let imageUrl = null;
   if (file) {
     try {
-      if (IMAGEKIT_URL_ENDPOINT) {
-        const uploaded = await uploadToImageKit(file);
-        console.log('uploadToImageKit returned:', uploaded);
-        // uploaded might already be a string URL, or occasionally an object — normalize:
+      if (UPLOADCARE_PUBLIC_KEY) {
+        const uploaded = await uploadToUploadcare(file);
+        console.log('uploadToUploadcare returned:', uploaded);
         if (typeof uploaded === 'string' && uploaded.trim()) {
           imageUrl = uploaded;
-        } else if (uploaded && typeof uploaded === 'object') {
-          imageUrl = uploaded.url || uploaded.filePath ? (IMAGEKIT_URL_ENDPOINT.replace(/\/$/,'') + (uploaded.filePath && !uploaded.filePath.startsWith('/') ? '/' + uploaded.filePath : (uploaded.filePath || ''))) : null;
         }
-        if (!imageUrl) console.warn('ImageKit upload returned no usable URL', uploaded);
+        if (!imageUrl) console.warn('Uploadcare upload returned no usable URL', uploaded);
       } else {
-        console.warn("ImageKit not configured; skipping image upload.");
+        console.warn("Uploadcare not configured; skipping image upload.");
       }
     } catch (err) {
       console.warn("Image upload failed:", err);
     }
   }
-
-async function fetchImageKitSignatureFromServer(fileName = `upload_${Date.now()}`) {
-  if (!firebase || !firebase.auth) throw new Error('Firebase not available');
-  const user = firebase.auth().currentUser;
-  if (!user) throw new Error('Not signed in');
-  const idToken = await user.getIdToken();
-
-  const resp = await fetch('https://campus-leaders-archive.vercel.app/imagekit-auth', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + idToken
-    },
-    body: JSON.stringify({ fileName })
-  });
-  if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error('Auth endpoint failed: ' + resp.status + ' — ' + txt);
-  }
-  return resp.json(); // { token, expire, signature }
-}
 
   const newPost = {
     title: title || null,
@@ -1023,7 +952,7 @@ async function populateProfileUI(user) {
   // update left card
   if (avatarEl) {
     const pic = (userDoc && userDoc.imageUrl) || user.photoURL || null;
-    if (pic) avatarEl.innerHTML = `<img src="${pic}" alt="avatar" class="h-20 w-20 rounded-full object-cover">`;
+    if (pic) avatarEl.innerHTML = `<img src="${normalizeImageUrl(pic)}" alt="avatar" class="h-20 w-20 rounded-full object-cover">`;
     else avatarEl.innerHTML = `<i class="fas fa-user text-2xl"></i>`;
   }
   if (nameEl) nameEl.textContent = full;
@@ -1041,7 +970,7 @@ async function populateProfileUI(user) {
   const navAvatarWrap = document.querySelector("#user-menu-button > div");
   if (navAvatarWrap) {
     const pic = (userDoc && userDoc.imageUrl) || user.photoURL || null;
-    if (pic) navAvatarWrap.innerHTML = `<img src="${pic}" alt="avatar" class="h-8 w-8 rounded-full object-cover">`;
+    if (pic) navAvatarWrap.innerHTML = `<img src="${normalizeImageUrl(pic)}" alt="avatar" class="h-8 w-8 rounded-full object-cover">`;
     else navAvatarWrap.innerHTML = `<i class="fas fa-user"></i>`;
   }
 }
@@ -1116,7 +1045,7 @@ async function doSearch(q) {
       const el = document.createElement("a");
       el.href = "#";
       el.className = "flex items-center gap-3 p-2 rounded hover:bg-gray-50";
-      el.innerHTML = `<div class="h-10 w-10 rounded-full bg-gray-200 overflow-hidden">${u.imageUrl ? `<img src="${u.imageUrl}" class="h-full w-full object-cover">` : `<i class="fas fa-user"></i>`}</div>
+      el.innerHTML = `<div class="h-10 w-10 rounded-full bg-gray-200 overflow-hidden">${u.imageUrl ? `<img src="${normalizeImageUrl(u.imageUrl)}" class="h-full w-full object-cover">` : `<i class="fas fa-user"></i>`}</div>
         <div><div class="font-medium">${escapeHtml((u.firstName || "") + " " + (u.lastName || ""))}</div><div class="text-xs text-gray-500">${escapeHtml(u.schoolName || "")} • ${escapeHtml(u.association || "")}</div></div>`;
       el.addEventListener("click", (ev) => { ev.preventDefault(); openProfile(u.id); searchModal.hide(); });
       r.appendChild(el);

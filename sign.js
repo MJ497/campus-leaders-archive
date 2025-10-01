@@ -1,9 +1,14 @@
-// sign.js - Combined Firebase email/password signup + login + Imgur upload + Paystack
+// sign.js - Combined Firebase email/password signup + login + Uploadcare upload + Paystack
 // CONFIG: update these if needed
 const REGISTRATION_FEE_NGN = 2500;
 const PAYSTACK_KEY = 'pk_test_cd5536a98573d218606597cfcb75a963cff8f1a4'; // replace with your Paystack key
 const SAVE_USER_ENDPOINT = '/api/auth/register'; // optional server hook (not required if using Firebase)
-const IMGUR_CLIENT_ID = '8b398f14462ad09'; // your Imgur client id
+
+// UPLOADCARE settings (replaces Imgur)
+const UPLOADCARE_PUBLIC_KEY = "2683b7806064b3db73e3"; // <-- replace with your Uploadcare public key
+const UPLOADCARE_BASE_UPLOAD = "https://upload.uploadcare.com/base/"; // REST upload endpoint
+const UPLOADCARE_CDN = "https://12hsb3bgrj.ucarecd.net/"; // CDN base for uploaded files
+
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDC3L5vruhYXfarn5O81cLld50oagYkmxE",
   authDomain: "campus-leaders.firebaseapp.com",
@@ -257,18 +262,31 @@ function payWithPaystack(email, amountNGN, metadata = {}, onSuccess, onClose) {
   handler.openIframe();
 }
 
-// upload image to Imgur
-async function uploadImageToImgur(file) {
-  if (!IMGUR_CLIENT_ID) throw new Error('Imgur client id not set');
-  const form = new FormData(); form.append('image', file);
-  const res = await fetch('https://api.imgur.com/3/image', {
+// ---------- UPLOAD to Uploadcare (replaces Imgur) ----------
+async function uploadImageToUploadcare(file) {
+  if (!UPLOADCARE_PUBLIC_KEY) throw new Error('Uploadcare public key not set');
+  const form = new FormData();
+  form.append('file', file);
+  form.append('UPLOADCARE_PUB_KEY', UPLOADCARE_PUBLIC_KEY);
+  form.append('UPLOADCARE_STORE', '1'); // store and make available on CDN
+
+  const resp = await fetch(UPLOADCARE_BASE_UPLOAD, {
     method: 'POST',
-    headers: { Authorization: `Client-ID ${IMGUR_CLIENT_ID}` },
     body: form
   });
-  const data = await res.json();
-  if (!res.ok || !data || !data.data || !data.data.link) throw new Error('Imgur upload failed');
-  return data.data.link;
+
+  const data = await resp.json();
+  if (!resp.ok) {
+    const msg = data?.error?.message || data?.detail || data?.message || JSON.stringify(data);
+    throw new Error('Uploadcare upload failed: ' + msg);
+  }
+
+  // data.file contains uuid/path. Build CDN URL.
+  const fileId = (data && data.file) ? String(data.file).replace(/^\/+|\/+$/g, '') : null;
+  if (!fileId) throw new Error('Uploadcare did not return file id');
+  // Ensure trailing slash for consistent usage
+  const cdnUrl = `${UPLOADCARE_CDN.replace(/\/+$/,'')}/${fileId}/`;
+  return cdnUrl;
 }
 
 // helpers to find state/school docs by name (optional, non-destructive)
@@ -338,14 +356,14 @@ signupForm.addEventListener('submit', async (e) => {
       const user = userCred.user;
       const uid = user.uid;
 
-      // upload image to Imgur (optional)
+      // upload image to Uploadcare (optional)
       let imageUrl = null;
       if (imageInput.files && imageInput.files[0]) {
         try {
           modal.showLoading('Uploading profile image...');
-          imageUrl = await uploadImageToImgur(imageInput.files[0]);
+          imageUrl = await uploadImageToUploadcare(imageInput.files[0]);
         } catch (err) {
-          console.warn('Imgur upload failed (continuing):', err);
+          console.warn('Uploadcare upload failed (continuing):', err);
         }
       }
 
