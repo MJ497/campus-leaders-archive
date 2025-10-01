@@ -306,5 +306,246 @@
 
   <!-- Script: profile logic (inlined) -->
  <script src="profile.js" defer></script>
+ <script>
+/* Mobile hamburger + nav behavior for your provided nav.
+   - Injects a hamburger button (visible on mobile).
+   - Creates a mobile menu that contains your nav links + user menu items.
+   - Toggles mobile search, user menu, and mobile nav; closes on outside click or ESC.
+*/
+
+document.addEventListener('DOMContentLoaded', () => {
+  const nav = document.querySelector('nav.bg-white');
+  if (!nav) return;
+
+  // Find the left area that contains logo + desktop links
+  const leftArea = nav.querySelector('.flex.items-center.space-x-6') || nav.querySelector('div > .flex');
+  const desktopLinksContainer = nav.querySelector('div.hidden.md\\:flex') || nav.querySelector('.md\\:flex');
+  const userMenu = document.getElementById('user-menu');
+  const userMenuButton = document.getElementById('user-menu-button');
+  const mobileSearchBtn = document.getElementById('mobile-search-btn');
+  const mobileSearch = document.getElementById('mobile-search');
+  const mobileSearchClose = document.getElementById('mobile-search-close');
+
+  // Create hamburger button (inserted near logo/links)
+  const burgerBtn = document.createElement('button');
+  burgerBtn.id = 'mobile-menu-button';
+  burgerBtn.className = 'md:hidden p-2 rounded bghover';
+  burgerBtn.type = 'button';
+  burgerBtn.setAttribute('aria-expanded', 'false');
+  burgerBtn.setAttribute('aria-controls', 'mobile-menu');
+  burgerBtn.innerHTML = '<i class="fas fa-bars" aria-hidden="true"></i>';
+  // place burger before desktop links (so it's next to logo)
+  if (leftArea) leftArea.insertBefore(burgerBtn, desktopLinksContainer || leftArea.firstChild);
+
+  // Build mobile menu container (hidden by default)
+  const mobileMenu = document.createElement('div');
+  mobileMenu.id = 'mobile-menu';
+  mobileMenu.className = 'hidden md:hidden border-t border-gray-200 bg-white px-4 py-3';
+  mobileMenu.setAttribute('aria-hidden', 'true');
+
+  // Populate mobile menu with desktop links (clone)
+  if (desktopLinksContainer) {
+    const clonedLinks = desktopLinksContainer.cloneNode(true);
+    // remove classes that hide on mobile
+    clonedLinks.className = clonedLinks.className.replace(/\bhidden\b/g, '').replace(/\bmd\:flex\b/g, '');
+    // make links block-level for mobile
+    const linksWrapper = document.createElement('div');
+    linksWrapper.className = 'space-y-2';
+    // move anchor children into wrapper and make them full width
+    Array.from(clonedLinks.querySelectorAll('a')).forEach(a => {
+      const a2 = a.cloneNode(true);
+      a2.classList.add('block', 'px-2', 'py-2', 'text-sm');
+      linksWrapper.appendChild(a2);
+    });
+    mobileMenu.appendChild(linksWrapper);
+  }
+
+  // If there is a user-menu (desktop), clone it into mobile menu as options
+  if (userMenu) {
+    const userTitle = document.createElement('div');
+    userTitle.className = 'mt-3 mb-1 text-xs text-gray-500 uppercase';
+    userTitle.textContent = 'Account';
+    mobileMenu.appendChild(userTitle);
+
+    const ul = document.createElement('div');
+    ul.className = 'space-y-1';
+    Array.from(userMenu.querySelectorAll('a')).forEach(a => {
+      const ap = a.cloneNode(true);
+      ap.classList.remove('block'); // ensure consistent classes
+      ap.classList.add('block', 'px-2', 'py-2', 'text-sm');
+      ul.appendChild(ap);
+    });
+    mobileMenu.appendChild(ul);
+  }
+
+  // Insert mobileMenu right after nav content
+  nav.appendChild(mobileMenu);
+
+  // helper: toggle element visibility with aria attributes
+  function setVisible(el, visible) {
+    if (!el) return;
+    if (visible) {
+      el.classList.remove('hidden');
+      el.setAttribute('aria-hidden', 'false');
+    } else {
+      el.classList.add('hidden');
+      el.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  // Toggle mobile menu
+  function toggleMobileMenu() {
+    const open = !mobileMenu.classList.contains('hidden');
+    // if it's open -> close; else open
+    setVisible(mobileMenu, open ? false : true);
+    burgerBtn.setAttribute('aria-expanded', String(open ? false : true));
+    // swap icon
+    const icon = burgerBtn.querySelector('i');
+    if (icon) icon.className = open ? 'fas fa-bars' : 'fas fa-times';
+    // if opening mobile menu, close mobile search and user menu
+    if (!open) {
+      if (mobileSearch && !mobileSearch.classList.contains('hidden')) {
+        setVisible(mobileSearch, false);
+      }
+      if (userMenu && !userMenu.classList.contains('hidden')) {
+        userMenu.classList.add('hidden');
+        userMenuButton && userMenuButton.setAttribute('aria-expanded', 'false');
+      }
+    }
+  }
+
+  burgerBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMobileMenu();
+  });
+
+  // Close mobile menu when a mobile menu link is clicked
+  mobileMenu.addEventListener('click', (ev) => {
+    const a = ev.target.closest && ev.target.closest('a');
+    if (a) {
+      // let the default link action proceed, but close the menu
+      setVisible(mobileMenu, false);
+      burgerBtn.setAttribute('aria-expanded', 'false');
+      const icon = burgerBtn.querySelector('i'); if (icon) icon.className = 'fas fa-bars';
+    }
+  });
+
+  // wire document click to close menus when clicking outside
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+    // if click inside mobileMenu, burgerBtn, userMenu, userMenuButton, or mobileSearch -> ignore
+    if (
+      mobileMenu.contains(target) ||
+      burgerBtn.contains(target) ||
+      (userMenu && userMenu.contains(target)) ||
+      (userMenuButton && userMenuButton.contains(target)) ||
+      (mobileSearch && mobileSearch.contains(target)) ||
+      (mobileSearchBtn && mobileSearchBtn.contains(target))
+    ) return;
+
+    // close mobile menu
+    if (!mobileMenu.classList.contains('hidden')) {
+      setVisible(mobileMenu, false);
+      burgerBtn.setAttribute('aria-expanded', 'false');
+      const icon = burgerBtn.querySelector('i'); if (icon) icon.className = 'fas fa-bars';
+    }
+    // close user menu (desktop)
+    if (userMenu && !userMenu.classList.contains('hidden')) {
+      userMenu.classList.add('hidden');
+      userMenuButton && userMenuButton.setAttribute('aria-expanded', 'false');
+    }
+    // close mobile search
+    if (mobileSearch && !mobileSearch.classList.contains('hidden')) {
+      setVisible(mobileSearch, false);
+      mobileSearchBtn && mobileSearchBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // ESC key closes everything
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') {
+      if (!mobileMenu.classList.contains('hidden')) {
+        setVisible(mobileMenu, false);
+        burgerBtn.setAttribute('aria-expanded', 'false');
+        const icon = burgerBtn.querySelector('i'); if (icon) icon.className = 'fas fa-bars';
+      }
+      if (userMenu && !userMenu.classList.contains('hidden')) {
+        userMenu.classList.add('hidden');
+        userMenuButton && userMenuButton.setAttribute('aria-expanded', 'false');
+      }
+      if (mobileSearch && !mobileSearch.classList.contains('hidden')) {
+        setVisible(mobileSearch, false);
+        mobileSearchBtn && mobileSearchBtn.setAttribute('aria-expanded', 'false');
+      }
+    }
+  });
+
+  // Wire existing user menu button (desktop) to toggle menu
+  if (userMenuButton && userMenu) {
+    userMenuButton.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const isHidden = userMenu.classList.contains('hidden');
+      if (isHidden) {
+        userMenu.classList.remove('hidden');
+        userMenuButton.setAttribute('aria-expanded', 'true');
+        // close mobile menu/search if open
+        setVisible(mobileMenu, false);
+        setVisible(mobileSearch, false);
+        burgerBtn.setAttribute('aria-expanded', 'false');
+        const icon = burgerBtn.querySelector('i'); if (icon) icon.className = 'fas fa-bars';
+      } else {
+        userMenu.classList.add('hidden');
+        userMenuButton.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  // Mobile search toggle already exists in markup: hook it
+  if (mobileSearchBtn && mobileSearch) {
+    mobileSearchBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const open = !mobileSearch.classList.contains('hidden');
+      setVisible(mobileSearch, open ? false : true);
+      mobileSearchBtn.setAttribute('aria-expanded', String(open ? false : true));
+      // if opening mobile search, close mobile menu and user menu
+      if (!open) {
+        setVisible(mobileMenu, false);
+        if (userMenu) { userMenu.classList.add('hidden'); userMenuButton && userMenuButton.setAttribute('aria-expanded','false'); }
+        burgerBtn.setAttribute('aria-expanded', 'false');
+        const icon = burgerBtn.querySelector('i'); if (icon) icon.className = 'fas fa-bars';
+      }
+    });
+  }
+  // close mobile search when user clicks the close button
+  if (mobileSearchClose) {
+    mobileSearchClose.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      setVisible(mobileSearch, false);
+      mobileSearchBtn && mobileSearchBtn.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  // Accessibility: ensure focus trap isn't required here, but focus first link when opening mobile menu
+  burgerBtn.addEventListener('keydown', (ev) => {
+    if ((ev.key === 'Enter' || ev.key === ' ') && !mobileMenu.classList.contains('hidden')) {
+      // If opened, move focus into first link
+      const firstLink = mobileMenu.querySelector('a');
+      if (firstLink) firstLink.focus();
+    }
+  });
+
+  // If the mobile menu exists and window is resized to desktop, ensure mobile-menu hidden
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 768) {
+      setVisible(mobileMenu, false);
+      burgerBtn.setAttribute('aria-expanded', 'false');
+      const icon = burgerBtn.querySelector('i'); if (icon) icon.className = 'fas fa-bars';
+      if (mobileSearch) setVisible(mobileSearch, false);
+      if (userMenu) { userMenu.classList.add('hidden'); userMenuButton && userMenuButton.setAttribute('aria-expanded','false'); }
+    }
+  });
+});
+</script>
+
 </body>
 </html>
