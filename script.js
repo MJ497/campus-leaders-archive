@@ -14,7 +14,7 @@ const FIREBASE_CONFIG = {
 // IMAGEKIT settings (replaces Imgur)
 const IMAGEKIT_PUBLIC_KEY = "public_Yc+TmJvl4n8bSL8TprTA9AuF3Jg="; // optional (depends on upload mode)
 const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/9k31dyxjv"; // your ImageKit URL endpoint
-const IMAGEKIT_AUTH_ENDPOINT = ""; // optional: server endpoint that returns signature/token/expire for secure uploads
+const IMAGEKIT_AUTH_ENDPOINT = "https://your-vercel-app.vercel.app/imagekit-auth";// optional: server endpoint that returns signature/token/expire for secure uploads
 
 const POSTS_COLLECTION = "posts";
 const POSTS_PAGE_LIMIT = 50;
@@ -920,7 +920,7 @@ async function fetchImageKitSignatureFromServer(fileName = `upload_${Date.now()}
   if (!user) throw new Error('Not signed in');
   const idToken = await user.getIdToken();
 
-  const resp = await fetch('https://campus-leaders-archive-git-main-macjohnsons-projects.vercel.app/imagekit-auth', {
+  const resp = await fetch('https://campus-leaders-archive.vercel.app/imagekit-auth', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
