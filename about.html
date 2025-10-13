@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>About — Campus Leaders</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="main.css">
+  <link rel="shortcut icon" href="logo.png" type="image/x-icon">
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+</head>
+<body class="bg-white text-gray-900 min-h-screen">
+  <nav class="bg-white border-b border-gray-200 fixed w-full z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex items-center space-x-6">
+          <a href="index.html" class="flex items-center gap-3">
+            <img src="logo.png" alt="Campus Leaders logo" class="h-20 w-auto" />
+          </a>
+          <div class="hidden md:flex md:space-x-6">
+            <a href="dashboard.html" class="nav-item px-1 py-2 text-sm">Home</a>
+            <a href="profile.html" class="nav-item px-1 py-2 text-sm  font-semibold">Profile</a>
+            <a href="about.html" class="nav-item px-1 py-2 text-sm active-tab">About Us</a>
+            <a href="contact.html" class="nav-item px-1 py-2 text-sm ">Support</a>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+          <!-- <form id="global-search-form" action="" method="GET" class="hidden md:flex items-center w-80">
+            <div class="relative flex-1">
+              <input id="global-search" name="q" type="search" placeholder="Search profile, members, posts..."
+                     class="w-full bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none" />
+              <button type="submit" aria-label="Search" class="absolute right-1 top-1/2 transform -translate-y-1/2 p-2 rounded-full bghover">
+                <i class="fas fa-search text-gray-600"></i>
+              </button>
+            </div>
+          </form> -->
+
+          <!-- <button id="mobile-search-btn" class="md:hidden p-2 rounded-full bghover" aria-expanded="false" aria-controls="mobile-search">
+            <i class="fas fa-search"></i>
+          </button> -->
+
+          <div class="relative">
+            <button id="user-menu-button" class="flex items-center p-1 rounded-full focus:outline-none" aria-expanded="false" aria-haspopup="true">
+              <div id="nav-avatar" class="h-8 w-8 rounded-full bg-linear text-white flex items-center justify-center">
+                <i class="fas fa-user"></i>
+              </div>
+            </button>
+
+            <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md border border-gray-200" role="menu" aria-hidden="true">
+              <a href="profile.html" class="block px-4 py-2 bghover" role="menuitem">Profile</a>
+              <a id="sign-out" href="#" class="block px-4 py-2 bghover" role="menuitem">Sign Out</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- <div id="mobile-search" class="hidden md:hidden border-t border-gray-200 bg-white px-4 py-3">
+      <form action="/search" method="GET" class="flex items-center gap-2">
+        <input id="mobile-search-input" name="q" type="search" placeholder="Search courses, members, posts..."
+               class="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none" />
+        <button type="submit" aria-label="Search" class="p-2 rounded-full bghover"><i class="fas fa-search"></i></button>
+        <button id="mobile-search-close" type="button" class="p-2 rounded-full bghover"><i class="fas fa-times"></i></button>
+      </form>
+    </div> -->
+  </nav>
+
+  <main class="pt-20 pb-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- HERO / Intro -->
+  
+
+    <!-- Image + Text sections (image left, text right) -->
+    <section class="space-y-12">
+      <div class="about-section grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+        
+        <div class="order-1 lg:order-2">
+            <h1 class="text-3xl sm:text-4xl font-extrabold">About Campus Leaders</h1>
+          <h2 class="text-2xl font-semibold">An Archive for Posterity</h2>
+          <p class="mt-3 text-gray-700">Archives are the guardians of history. By documenting student leaders' journeys, the Campus Leaders Archive safeguards their achievements and ensures their stories are accessible to future generations.
+            Through storytelling, the archive showcases real examples of leadership. These stories empower students to dream big and provide practical insights for their own journeys.
+          </p>
+        </div>
+        <div class="order-1 lg:order-2">
+          <img src="logo.png" alt="Archive" class="rounded-xl shadow-md w-50 object-cover" />
+        </div>
+      </div>
+
+  
+
+      <div class="about-section grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+       <div>
+          <img src="logo.png" alt="Network" class="rounded-xl shadow-md w-full object-cover" />
+        </div>
+        <div>
+          <h2 class="text-2xl font-semibold">Building a Network of Change-makers</h2>
+          <p class="mt-3 text-gray-700">The archive is a community hub for collaboration—allowing current and former leaders to connect, share resources, and learn from each other to fuel innovation and growth.
+            Featured profiles provide tangible proof of leadership experience—helping members stand out to employers, recruiters, and graduate programs.
+            This archive ensures that student leaders' impact is not lost to time, creating a living history that inspires generations to come.
+          </p>
+        </div>
+         
+      </div>
+
+    
+
+     
+    </section>
+
+    <!-- Feedback carousel -->
+   <section class="mb-10">
+      <div class="bg-white rounded-2xl shadow-lg p-8 grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+        <div>
+          
+          <p class="mt-3 text-gray-600 max-w-prose">We celebrate and preserve the achievements of student leaders across campuses. This archive captures their stories, resources and impact so future changemakers can learn and be inspired.</p>
+          <div class="mt-6 flex items-center gap-3">
+           
+            <a href="contact.html" class="inline-flex items-center px-4 py-3 rounded-lg border border-gray-200 text-sm">Contact us</a>
+          </div>
+        </div>
+        <div class="hidden lg:block">
+          <div class="h-56 w-full rounded-xl bg-gradient-to-tr from-indigo-50 to-pink-50 flex items-center justify-center border border-dashed border-gray-200">
+            <img src="logo.png" alt="students collaborating" class="max-h-48 object-contain" />
+          </div>
+        </div>
+      </div>
+    </section>
+  
+  </main>
+
+ <footer class="bg-gray-900 text-white border-t border-gray-200 py-8 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="font-bold text-lg mb-4">Campus leaders</h3>
+          <p class="text-sm text-white">The community for sharing, and growing together.</p>
+        </div>
+        <div>
+          <h4 class="font-medium mb-3">Community</h4>
+          <ul class="space-y-2">
+          
+            <li><a href="#" class="text-sm text-white hover">Events</a></li>
+           
+          </ul>
+        </div>
+      
+        <div>
+          <h4 class="font-medium mb-3">Company</h4>
+          <ul class="space-y-2">
+            <li><a href="about.html" class="text-sm text-white hover">About</a></li>
+          
+            <li><a href="contact.html" class="text-sm text-white hover">Contact</a></li>
+          </ul>
+        </div> 
+         <div>
+          <h4 class="font-medium mb-3">Socials</h4>
+          <ul class="space-y-2">
+            <li>  <a href="#" class="text-white hover"><i class="fab fa-twitter"></i></a>  Twitter</li>
+          
+          
+            <li><a href="#" class="text-white hover"><i class="fab fa-linkedin"></i></a> linkedin</li>
+            <li> <a href="#" class="text-white hover"><i class="fab fa-facebook"></i></a> Facebook</li>
+          </ul>
+        </div> 
+      
+      </div>
+    
+    </div>
+  </footer>
+
+  <script src="profile.js" defer></script>
+
+  <script>
+    // Wire auth -> nav avatar and global search to script.js helpers
+    document.addEventListener('DOMContentLoaded', () => {
+      const navAvatar = document.getElementById('nav-avatar');
+      const userMenu = document.getElementById('user-menu');
+      const searchForm = document.getElementById('global-search-form');
+
+      // Auth state: replace nav avatar with user photo when logged in
+      if (window.firebase && firebase.auth) {
+        firebase.auth().onAuthStateChanged(async (user) => {
+          if (!user) {
+            if (navAvatar) navAvatar.innerHTML = '<i class="fas fa-user"></i>';
+            return;
+          }
+          // try Firestore user doc for nicer image
+          let doc = null;
+          try { doc = (await firebase.firestore().collection('users').doc(user.uid).get()).data(); } catch (e) { /* ignore */ }
+          const src = (doc && doc.imageUrl) || user.photoURL || '';
+          if (navAvatar) {
+            navAvatar.innerHTML = '';
+            const img = document.createElement('img');
+            img.alt = user.displayName || user.email || 'Account';
+            img.loading = 'lazy';
+            img.className = 'h-full w-full object-cover rounded-full';
+            if (src) img.src = src;
+            navAvatar.appendChild(img);
+          }
+          // add quick name header to user-menu if missing
+          if (userMenu && !userMenu.querySelector('.menu-user-header')) {
+            const header = document.createElement('div');
+            header.className = 'menu-user-header px-4 py-2 text-sm font-medium border-b';
+            header.textContent = (doc && ((doc.firstName||'') + ' ' + (doc.lastName||''))) || user.displayName || user.email || 'Account';
+            userMenu.insertBefore(header, userMenu.firstChild);
+          }
+        });
+      }
+
+      // Global search: prefer in-page doSearch() if available (from script.js), otherwise fallback to a search page
+      if (searchForm) {
+        searchForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const q = (document.getElementById('global-search')||{value:''}).value.trim();
+          if (!q) return;
+          if (typeof doSearch === 'function') {
+            // ensure modal exists (script.js.createSearchModal)
+            try { doSearch(q); } catch (err) { console.warn('doSearch failed', err); window.location.href = '/search?q=' + encodeURIComponent(q); }
+          } else {
+            window.location.href = '/search?q=' + encodeURIComponent(q);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

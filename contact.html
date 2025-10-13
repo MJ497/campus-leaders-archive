@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Contact — Campus Leaders</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="main.css">
+</head>
+<body class="bg-white text-gray-900 min-h-screen">
+
+ <nav class="bg-white border-b border-gray-200 fixed w-full z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex items-center space-x-6">
+          <a href="index.html" class="flex items-center gap-3">
+            <img src="logo.png" alt="Campus Leaders logo" class="h-20 w-auto" />
+          </a>
+          <div class="hidden md:flex md:space-x-6">
+            <a href="dashboard.html" class="nav-item px-1 py-2 text-sm">Home</a>
+            <a href="profile.html" class="nav-item px-1 py-2 text-sm  font-semibold">Profile</a>
+            <a href="about.html" class="nav-item px-1 py-2 text-sm">About Us</a>
+            <a href="contact.html" class="nav-item px-1 py-2 text-sm active-tab">Support</a>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+          <form action="" method="GET" class="hidden md:flex items-center w-80">
+            <div class="relative flex-1">
+              <input id="global-search" name="q" type="search" placeholder="Search profile, members, posts..."
+                     class="w-full bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none" />
+              <button type="submit" aria-label="Search" class="absolute right-1 top-1/2 transform -translate-y-1/2 p-2 rounded-full bghover">
+                <i class="fas fa-search text-gray-600"></i>
+              </button>
+            </div>
+          </form>
+
+          <button id="mobile-search-btn" class="md:hidden p-2 rounded-full bghover" aria-expanded="false" aria-controls="mobile-search">
+            <i class="fas fa-search"></i>
+          </button>
+
+          <div class="relative">
+            <button id="user-menu-button" class="flex items-center p-1 rounded-full focus:outline-none" aria-expanded="false" aria-haspopup="true">
+              <div id="nav-avatar" class="h-8 w-8 rounded-full bg-linear text-white flex items-center justify-center">
+                <i class="fas fa-user"></i>
+              </div>
+            </button>
+
+            <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md border border-gray-200" role="menu" aria-hidden="true">
+              <a href="profile.html" class="block px-4 py-2 bghover" role="menuitem">Profile</a>
+              <a id="sign-out" href="#" class="block px-4 py-2 bghover" role="menuitem">Sign Out</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div id="mobile-search" class="hidden md:hidden border-t border-gray-200 bg-white px-4 py-3">
+      <form action="/search" method="GET" class="flex items-center gap-2">
+        <input id="mobile-search-input" name="q" type="search" placeholder="Search courses, members, posts..."
+               class="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none" />
+        <button type="submit" aria-label="Search" class="p-2 rounded-full bghover"><i class="fas fa-search"></i></button>
+        <button id="mobile-search-close" type="button" class="p-2 rounded-full bghover"><i class="fas fa-times"></i></button>
+      </form>
+    </div>
+  </nav>
+
+  <main class="pt-20 pb-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-8">
+      <section class="bg-white p-6 rounded-lg border border-gray-200">
+        <h1 class="text-2xl font-bold mb-2">Contact & Support</h1>
+        <p class="text-sm text-gray-600 mb-4">Need help? Use the live chat, email support, or reach out on social media.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Left: support form -->
+          <div>
+            <h3 class="font-semibold mb-2">Support form</h3>
+            <form id="support-form" class="space-y-3">
+              <input id="support-name" class="w-full border rounded px-3 py-2" placeholder="Your name" />
+              <input id="support-email" class="w-full border rounded px-3 py-2" placeholder="Your email" />
+              <textarea id="support-message" class="w-full border rounded px-3 py-2" rows="4" placeholder="How can we help?"></textarea>
+  <div class="flex justify-end">
+                <button id="support-submit" class="px-4 py-2 rounded bg-two text-white">Send</button>
+              </div>
+              <div class="flex flex-wrap gap-2 items-center mt-1">
+                <div class="text-xs text-gray-500">Or reach us on social media:</div>
+                <!-- Social action buttons (clear, labeled) - uses existing classes -->
+                <div class="flex gap-2 ml-auto">
+                  <a href="#" class="inline-flex items-center gap-2 px-3 py-2 border rounded hover:shadow-sm bghover">
+                    <i class="fab fa-twitter"></i><span class="text-sm">Twitter</span>
+                  </a>
+                  <a href="#" class="inline-flex items-center gap-2 px-3 py-2 border rounded hover:shadow-sm bghover">
+                    <i class="fab fa-facebook"></i><span class="text-sm">Facebook</span>
+                  </a>
+                  <a href="#" class="inline-flex items-center gap-2 px-3 py-2 border rounded hover:shadow-sm bghover">
+                    <i class="fab fa-instagram"></i><span class="text-sm">Instagram</span>
+                  </a>
+                  <a href="#" class="inline-flex items-center gap-2 px-3 py-2 border rounded hover:shadow-sm bghover">
+                    <i class="fab fa-linkedin"></i><span class="text-sm">LinkedIn</span>
+                  </a>
+                </div>
+              </div>
+
+            
+            </form>
+
+            <div class="mt-6">
+              <h3 class="font-semibold mb-2">FAQ</h3>
+
+              <!-- Accordion: custom so only one open at a time -->
+              <div id="faq" class="space-y-2">
+                <div class="border rounded-lg">
+                  <button class="w-full text-left px-4 py-3 flex justify-between items-center faq-trigger">
+                    <span class="font-medium">How do I report a user?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                  </button>
+                  <div class="faq-panel px-4 pb-4 hidden">
+                    <p class="mt-2 text-sm text-gray-600">Email support or use the live chat and include the user's profile link.</p>
+                  </div>
+                </div>
+
+                <div class="border rounded-lg">
+                  <button class="w-full text-left px-4 py-3 flex justify-between items-center faq-trigger">
+                    <span class="font-medium">How do I export my profile?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                  </button>
+                  <div class="faq-panel px-4 pb-4 hidden">
+                    <p class="mt-2 text-sm text-gray-600">Visit your Profile page and use the export buttons to download PDF or Word.</p>
+                  </div>
+                </div>
+
+                <div class="border rounded-lg">
+                  <button class="w-full text-left px-4 py-3 flex justify-between items-center faq-trigger">
+                    <span class="font-medium">How can I list events on the platform?</span>
+                    <i class="fas fa-chevron-down faq-icon"></i>
+                  </button>
+                  <div class="faq-panel px-4 pb-4 hidden">
+                    <p class="mt-2 text-sm text-gray-600">Use the Events section on the dashboard. If you don't see it, reach out and we can enable event posting for your account.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: floating-chat preview (also accessible via floating button) -->
+          <div>
+            <h3 class="font-semibold mb-2">Quick support</h3>
+            <p class="text-sm text-gray-600 mb-3">Use quick chat for fast questions — click the chat button at the bottom-right.</p>
+
+            <div class="bg-gray-50 rounded-lg p-4 border">
+              <p class="text-sm text-gray-700">Typical response time: <strong>within 24 hours</strong></p>
+              <div class="mt-4 grid grid-cols-1 gap-2">
+               
+                <div class="flex items-start gap-3 p-3 rounded border">
+                  <div class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"><i class="fas fa-envelope"></i></div>
+                  <div>
+                    <div class="font-medium">Email</div>
+                    <div class="text-xs text-gray-600">hello@campusleaders.example</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Floating chat button -->
+  <button id="open-chat-btn" aria-haspopup="dialog" aria-controls="chat-window"
+          class="fixed right-6 bottom-6 z-50 rounded-full p-4 shadow-lg bg-two text-white bghover"
+          title="Open chat">
+    <i class="fas fa-comment-dots fa-lg"></i>
+    <span id="chat-unread" class="sr-only">New messages</span>
+  </button>
+
+  <!-- Chat window (hidden by default) -->
+  <div id="chat-window" role="dialog" aria-hidden="true" aria-label="Live chat"
+       class="fixed right-6 bottom-20 z-50 w-80 max-w-full bg-white border rounded-lg shadow-lg overflow-hidden hidden">
+    <div class="flex items-center justify-between px-4 py-2 border-b">
+      <div class="flex items-center gap-3">
+        <div class="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"><i class="fas fa-headset"></i></div>
+        <div>
+          <div class="font-semibold">Live Support</div>
+          <div class="text-xs text-gray-500">Usually replies within 24 hours</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="minimize-chat" class="p-1 rounded bghover" title="Minimize"><i class="fas fa-window-minimize"></i></button>
+        <button id="close-chat" class="p-1 rounded bghover" title="Close"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+
+    <div id="chat-body" class="p-3 h-56 overflow-auto space-y-2 bg-gray-50">
+      <!-- messages appended here -->
+      <div class="text-sm text-gray-600">Welcome — ask us anything.</div>
+    </div>
+
+    <div class="px-3 py-2 border-t bg-white">
+      <div class="flex gap-2">
+        <input id="chat-input" class="flex-1 border rounded px-3 py-2 text-sm" placeholder="Message admin..." />
+        <button id="chat-send" class="px-3 py-2 rounded bg-two text-white">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-gray-900 text-white py-8 mt-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">&copy; Campus Leaders</div>
+  </footer>
+
+  <script>
+    // Utilities
+    function escapeHtml(s){ if(!s && s!=='') return ''; return String(s).replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+
+    // NAV / mobile search behaviors (same as before)
+    (function navTools(){
+      const mobileSearchBtn = document.getElementById('mobile-search-btn');
+      const mobileSearch = document.getElementById('mobile-search');
+      const mobileSearchClose = document.getElementById('mobile-search-close');
+      const mobileToggle = document.getElementById('mobile-menu-toggle');
+      const primaryNav = document.getElementById('primary-nav');
+      const userMenuButton = document.getElementById('user-menu-button');
+      const userMenu = document.getElementById('user-menu');
+
+      if (mobileSearchBtn) mobileSearchBtn.addEventListener('click', ()=> mobileSearch && mobileSearch.classList.toggle('hidden'));
+      if (mobileSearchClose) mobileSearchClose.addEventListener('click', ()=> mobileSearch && mobileSearch.classList.add('hidden'));
+
+      if (userMenuButton) {
+        userMenuButton.addEventListener('click', (e)=> { e.stopPropagation(); if (userMenu) userMenu.classList.toggle('hidden'); });
+        document.addEventListener('click', (e)=> { if (userMenu && !userMenu.contains(e.target) && !userMenuButton.contains(e.target)) userMenu.classList.add('hidden'); });
+      }
+    })();
+
+    // Floating chat behavior
+    (function chatWidget(){
+      const openBtn = document.getElementById('open-chat-btn');
+      const chatWin = document.getElementById('chat-window');
+      const closeBtn = document.getElementById('close-chat');
+      const minimizeBtn = document.getElementById('minimize-chat');
+      const chatSend = document.getElementById('chat-send');
+      const chatInput = document.getElementById('chat-input');
+      const chatBody = document.getElementById('chat-body');
+
+      function showChat(){ chatWin.classList.remove('hidden'); chatWin.setAttribute('aria-hidden','false'); openBtn.classList.add('hidden'); chatInput.focus(); }
+      function hideChat(){ chatWin.classList.add('hidden'); chatWin.setAttribute('aria-hidden','true'); openBtn.classList.remove('hidden'); }
+      function minimizeChat(){ chatWin.classList.add('hidden'); openBtn.classList.remove('hidden'); }
+
+      openBtn.addEventListener('click', showChat);
+      closeBtn.addEventListener('click', hideChat);
+      minimizeBtn.addEventListener('click', minimizeChat);
+
+      function appendMsg(who, text){
+        const el = document.createElement('div');
+        el.className = 'p-2 rounded bg-white border';
+        el.innerHTML = '<div class="text-xs text-gray-500">'+escapeHtml(who)+'</div><div class="mt-1 text-sm text-gray-700">'+escapeHtml(text)+'</div>';
+        chatBody.appendChild(el);
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }
+
+      chatSend.addEventListener('click', ()=>{
+        const t = chatInput.value.trim(); if(!t) return;
+        appendMsg('You', t);
+        chatInput.value = '';
+        // demo reply
+        setTimeout(()=> appendMsg('Admin', 'Thanks — we will get back to you shortly.'), 800);
+      });
+
+      // support form will also append to chat window for demonstration
+      const supportForm = document.getElementById('support-form');
+      if (supportForm) supportForm.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const name = document.getElementById('support-name').value || 'Anonymous';
+        const email = document.getElementById('support-email').value || '';
+        const msg = document.getElementById('support-message').value || '';
+        appendMsg('You', name + (email ? ' ('+email+')' : '') + ': ' + msg);
+        setTimeout(()=> appendMsg('Admin', 'Thanks — we received your message.'), 700);
+        // open chat to show message
+        showChat();
+      });
+    })();
+
+    // FAQ accordion (only one open at a time)
+    (function faqAccordion(){
+      const triggers = document.querySelectorAll('.faq-trigger');
+      triggers.forEach(btn => {
+        btn.addEventListener('click', ()=> {
+          // close others
+          triggers.forEach(b => {
+            if (b !== btn) {
+              b.classList.remove('active');
+              const p = b.nextElementSibling; if (p && p.classList.contains('faq-panel')) p.classList.add('hidden');
+              const icon = b.querySelector('.faq-icon'); if (icon) { icon.classList.remove('rotate-180'); }
+            }
+          });
+          // toggle this
+          const panel = btn.nextElementSibling;
+          const icon = btn.querySelector('.faq-icon');
+          if (panel) panel.classList.toggle('hidden');
+          if (icon) icon.classList.toggle('rotate-180');
+        });
+      });
+    })();
+
+    // simple escape helper used also by support form
+    function escapeHtml(s){ if(!s && s!=='') return ''; return String(s).replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+  </script>
+
+  <script src="profile.js" defer></script>
+</body>
+</html>

@@ -585,13 +585,31 @@ function renderPost(postDoc) {
     imgWrap.appendChild(img); wrapper.appendChild(imgWrap);
   }
 
-  // title & body
+  // title & body (preserve paragraphs)
   if (post.title) {
     const t = document.createElement("h3"); t.className = "text-lg font-semibold mb-2"; t.textContent = post.title;
     wrapper.appendChild(t);
   }
-  const p = document.createElement("p"); p.className = "mb-3 text-sm text-gray-800"; p.textContent = post.body || "";
-  wrapper.appendChild(p);
+  // Helper: render body with paragraphs and line breaks preserved
+  function renderBodyWithParagraphs(bodyText) {
+    const container = document.createElement('div');
+    container.className = 'mb-3 text-sm text-gray-800';
+    if (!bodyText) return container;
+    // Normalize CRLF -> LF
+    const normalized = String(bodyText).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    // Split into paragraphs on two-or-more newlines
+    const paragraphs = normalized.split(/\n{2,}/g);
+    paragraphs.forEach((para, idx) => {
+      const pEl = document.createElement('p');
+      pEl.className = 'mb-2';
+      // escape HTML then convert single newlines to <br>
+      const safe = escapeHtml(para).replace(/\n/g, '<br>');
+      pEl.innerHTML = safe;
+      container.appendChild(pEl);
+    });
+    return container;
+  }
+  wrapper.appendChild(renderBodyWithParagraphs(post.body || ''));
 
   // counts default
   const likes = post.likeCount || 0;
@@ -762,7 +780,10 @@ async function loadCommentsInto(postId, container) {
     arr.forEach(c => {
       const el = document.createElement("div");
       el.className = "text-sm bg-gray-50 p-2 rounded";
-      el.innerHTML = `<strong>${escapeHtml(c.authorName || "User")}</strong> <div>${escapeHtml(c.text)}</div>`;
+      const commentBody = document.createElement('div');
+      commentBody.innerHTML = escapeHtml(c.text).replace(/\n/g, '<br>');
+      el.appendChild(document.createElement('strong')).textContent = c.authorName || "User";
+      el.appendChild(commentBody);
       container.appendChild(el);
     });
     return;
@@ -772,7 +793,10 @@ async function loadCommentsInto(postId, container) {
     const d = doc.data();
     const el = document.createElement("div");
     el.className = "text-sm bg-gray-50 p-2 rounded";
-    el.innerHTML = `<strong>${escapeHtml(d.authorName || "User")}</strong> <div>${escapeHtml(d.text)}</div>`;
+    const commentBody = document.createElement('div');
+    commentBody.innerHTML = escapeHtml(d.text).replace(/\n/g, '<br>');
+    el.appendChild(document.createElement('strong')).textContent = d.authorName || "User";
+    el.appendChild(commentBody);
     container.appendChild(el);
   });
 }
@@ -1047,21 +1071,57 @@ async function doSearch(q) {
       el.className = "flex items-center gap-3 p-2 rounded hover:bg-gray-50";
       el.innerHTML = `<div class="h-10 w-10 rounded-full bg-gray-200 overflow-hidden">${u.imageUrl ? `<img src="${normalizeImageUrl(u.imageUrl)}" class="h-full w-full object-cover">` : `<i class="fas fa-user"></i>`}</div>
         <div><div class="font-medium">${escapeHtml((u.firstName || "") + " " + (u.lastName || ""))}</div><div class="text-xs text-gray-500">${escapeHtml(u.schoolName || "")} • ${escapeHtml(u.association || "")}</div></div>`;
-      el.addEventListener("click", (ev) => { ev.preventDefault(); openProfile(u.id); searchModal.hide(); });
-      r.appendChild(el);
+        el.addEventListener("click", (ev) => { ev.preventDefault(); openProfile(u.id); searchModal.hide(); });
+        // expand user details inline: include position, state, year and bio if present
+        const details = document.createElement('div');
+        details.className = 'text-xs text-gray-600 mt-1';
+        const parts = [];
+        if (u.position) parts.push(escapeHtml(u.position));
+        if (u.stateName || u.state) parts.push(escapeHtml(u.stateName || u.state || ''));
+        if (u.yearHeld || u.year) parts.push(escapeHtml(u.yearHeld || u.year || ''));
+        if (u.username) parts.push('@' + escapeHtml(u.username));
+        if (parts.length) details.innerHTML = parts.join(' • ');
+        if (u.bio) {
+          const bioEl = document.createElement('div'); bioEl.className = 'mt-1 text-sm text-gray-700'; bioEl.innerHTML = escapeHtml(u.bio).replace(/\n/g, '<br>');
+          details.appendChild(bioEl);
+        }
+        el.appendChild(details);
+        r.appendChild(el);
     });
   }
   if (matches.posts.length) {
     const h = document.createElement("div"); h.className = "mt-3 mb-2"; h.innerHTML = `<h4 class="font-semibold">Posts</h4>`;
     r.appendChild(h);
-    matches.posts.forEach(p => {
-      const el = document.createElement("a");
-      el.href = "#";
-      el.className = "block p-2 rounded hover:bg-gray-50";
-      el.innerHTML = `<div class="font-medium">${escapeHtml(p.title || (p.body || "").slice(0,50))}</div>
-        <div class="text-xs text-gray-500">${escapeHtml((p.authorFirst || "") + " " + (p.authorLast || ""))} • ${escapeHtml(timeSince(p.createdAt && p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt)))}</div>`;
-      el.addEventListener("click", (ev) => { ev.preventDefault(); openPostInModal(p.id); searchModal.hide(); });
-      r.appendChild(el);
+    // Render up to 10 matched posts using the existing renderPost() so paragraphs and images are preserved.
+    matches.posts.slice(0, 10).forEach(p => {
+      const postNode = renderPost({ id: p.id, ...p });
+      // make the card clickable to open the full post modal
+      postNode.style.cursor = 'pointer';
+      postNode.addEventListener('click', (ev) => {
+        // if click originated from an interactive control, ignore so buttons/links still work
+        if (ev.target.closest('button, a, input, textarea, select')) return;
+        ev.preventDefault();
+        if (p.id) {
+          openPostInModal(p.id);
+        } else {
+          // local post (no id) — open a modal showing the rendered post node
+          const modal = document.createElement('div');
+          modal.style.position = 'fixed'; modal.style.left = 0; modal.style.top = 0; modal.style.width = '100%'; modal.style.height = '100%';
+          modal.style.zIndex = 99999; modal.style.display = 'flex'; modal.style.alignItems = 'center'; modal.style.justifyContent = 'center';
+          modal.style.backdropFilter = 'blur(4px)';
+          const wrapper = document.createElement('div'); wrapper.className = 'bg-white rounded-lg w-full max-w-3xl p-4';
+          const close = document.createElement('button'); close.className = 'px-3 py-1 rounded bghover'; close.textContent = 'Close';
+          close.addEventListener('click', () => modal.remove());
+          wrapper.appendChild(close);
+          const cloned = postNode.cloneNode(true);
+          // remove any ids that might conflict and show as static
+          wrapper.appendChild(cloned);
+          modal.appendChild(wrapper);
+          document.body.appendChild(modal);
+        }
+        searchModal.hide();
+      });
+      r.appendChild(postNode);
     });
   }
 }
@@ -1070,26 +1130,123 @@ async function doSearch(q) {
 async function openProfile(userId) {
   // for now, open a simple modal with user's info and posts
   try {
-    const doc = await db.collection("users").doc(userId).get();
-    if (!doc.exists) return alert("Profile not found.");
-    const u = doc.data();
-    const modal = document.createElement("div");
-    modal.style.position = "fixed"; modal.style.left = 0; modal.style.top = 0; modal.style.width = "100%"; modal.style.height = "100%";
-    modal.style.zIndex = 99999; modal.style.display = "flex"; modal.style.alignItems = "center"; modal.style.justifyContent = "center";
-    modal.style.backdropFilter = "blur(4px)"; modal.innerHTML = `
-      <div class="bg-white rounded-lg w-full max-w-2xl p-4">
-        <div class="flex justify-between items-center mb-4"><div class="flex items-center gap-4">
-          <div class="h-16 w-16 rounded-full overflow-hidden">${u.imageUrl ? `<img src="${u.imageUrl}" class="h-full w-full object-cover">` : `<i class="fas fa-user"></i>`}</div>
-          <div><div class="font-bold">${escapeHtml((u.firstName||"") + " " + (u.lastName||""))}</div><div class="text-xs text-gray-500">${escapeHtml(u.schoolName || "")} • ${escapeHtml(u.association || "")}</div></div>
-        </div><button id="close-profile" class="px-3 py-1 rounded bghover">Close</button></div>
-        <div id="profile-posts" class="space-y-3"></div>
-      </div>`;
+    // fetch user document (supports both Firebase and local fallback)
+    let u = null;
+    if (USE_FIREBASE && db) {
+      const doc = await db.collection("users").doc(userId).get();
+      if (!doc.exists) return alert("Profile not found.");
+      u = doc.data();
+    } else {
+      // local fallback: try to read from DOM or a localStore map if available
+      // best-effort: look for a stored users list in localStorage
+      const users = JSON.parse(localStorage.getItem('campus_users_v1') || '[]');
+      u = users.find(x => x.id === userId) || users.find(x => x.uid === userId) || null;
+      if (!u) {
+        // last resort: show minimal profile
+        u = { firstName: 'Member', lastName: '', imageUrl: null, schoolName: '', association: '' };
+      }
+    }
+
+    const modal = document.createElement('div');
+    modal.style.position = 'fixed'; modal.style.left = 0; modal.style.top = 0; modal.style.width = '100%'; modal.style.height = '100%';
+    modal.style.zIndex = 99999; modal.style.display = 'flex'; modal.style.alignItems = 'center'; modal.style.justifyContent = 'center';
+    modal.style.backdropFilter = 'blur(4px)';
+
+    // Build modal content with big avatar and compact recent-posts list
+    const container = document.createElement('div');
+    container.className = 'bg-white rounded-lg w-full max-w-3xl p-4';
+
+    const headerRow = document.createElement('div');
+    headerRow.className = 'flex items-center justify-between mb-4';
+
+    const left = document.createElement('div');
+    left.className = 'flex items-center gap-4';
+    const avatarWrap = document.createElement('div');
+    avatarWrap.className = 'h-28 w-28 rounded-full overflow-hidden flex items-center justify-center bg-gray-100';
+    if (u.imageUrl) {
+      const img = document.createElement('img'); img.src = normalizeImageUrl(u.imageUrl); img.className = 'h-full w-full object-cover'; img.alt = (u.firstName || '') + ' ' + (u.lastName || '');
+      avatarWrap.appendChild(img);
+    } else {
+      avatarWrap.innerHTML = '<i class="fas fa-user text-3xl text-gray-400"></i>';
+    }
+    left.appendChild(avatarWrap);
+
+    const meta = document.createElement('div');
+    meta.innerHTML = `<div class="font-bold text-lg">${escapeHtml((u.firstName||'') + ' ' + (u.lastName||''))}</div>
+      <div class="text-sm text-gray-600">${escapeHtml(u.schoolName || '')} ${escapeHtml(u.yearHeld || u.year || '')}</div>
+      <div class="text-xs text-gray-500 mt-1">${escapeHtml(u.position || '')} ${u.stateName ? '• ' + escapeHtml(u.stateName) : ''} ${u.association ? '• ' + escapeHtml(u.association) : ''}</div>
+      <div class="text-xs text-gray-500 mt-2">${u.email ? `<a href=\"mailto:${escapeHtml(u.email)}\" class=\"text-blue-600\">${escapeHtml(u.email)}</a>` : ''} ${u.phone || u.phoneNumber ? ` • <a href=\"tel:${escapeHtml(u.phone || u.phoneNumber)}\" class=\"text-blue-600\">${escapeHtml(u.phone || u.phoneNumber)}</a>` : ''}</div>`;
+    left.appendChild(meta);
+
+    headerRow.appendChild(left);
+
+    const closeBtn = document.createElement('button'); closeBtn.className = 'px-3 py-1 rounded bghover'; closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', () => modal.remove());
+    headerRow.appendChild(closeBtn);
+
+    container.appendChild(headerRow);
+
+    // optional bio
+    if (u.bio) {
+      const bio = document.createElement('div'); bio.className = 'mb-3 text-sm text-gray-700'; bio.innerHTML = escapeHtml(u.bio).replace(/\n/g, '<br>');
+      container.appendChild(bio);
+    }
+
+    // Section title for recent posts
+    const postsTitle = document.createElement('div'); postsTitle.className = 'font-semibold mb-2'; postsTitle.textContent = 'Recent posts';
+    container.appendChild(postsTitle);
+
+    const postsList = document.createElement('div'); postsList.id = 'profile-posts'; postsList.className = 'space-y-2';
+    container.appendChild(postsList);
+
+    modal.appendChild(container);
     document.body.appendChild(modal);
-    modal.querySelector("#close-profile").addEventListener("click", () => modal.remove());
-    // load posts by this user
-    const postsSnap = await db.collection(POSTS_COLLECTION).where("authorId", "==", userId).orderBy("createdAt", "desc").limit(50).get();
-    const list = modal.querySelector("#profile-posts");
-    postsSnap.forEach(d => list.appendChild(renderPost({ id: d.id, ...d.data() })));
+
+    // Helper to create a compact post preview element
+    function createPostPreview(post) {
+      const el = document.createElement('a'); el.href = '#'; el.className = 'flex items-center gap-3 p-2 rounded hover:bg-gray-50';
+      // thumbnail
+      const thumb = document.createElement('div'); thumb.className = 'w-20 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0';
+      if (post.imageUrl) {
+        const im = document.createElement('img'); im.src = normalizeImageUrl(post.imageUrl); im.className = 'w-full h-full object-cover'; im.alt = post.title || '';
+        thumb.appendChild(im);
+      } else {
+        thumb.innerHTML = '<div class="w-full h-full flex items-center justify-center text-xs text-gray-500">No image</div>';
+      }
+      el.appendChild(thumb);
+      // text
+      const info = document.createElement('div'); info.className = 'flex-1';
+      const title = document.createElement('div'); title.className = 'font-medium text-sm'; title.textContent = post.title || (post.body || '').slice(0, 80);
+      const meta = document.createElement('div'); meta.className = 'text-xs text-gray-500';
+      const created = post.createdAt && post.createdAt.toDate ? post.createdAt.toDate() : (post.createdAt ? new Date(post.createdAt) : new Date());
+      meta.textContent = `${escapeHtml((post.authorFirst||'') + ' ' + (post.authorLast||''))} • ${escapeHtml(timeSince(created))}`;
+      info.appendChild(title); info.appendChild(meta);
+      el.appendChild(info);
+
+      el.addEventListener('click', (ev) => { ev.preventDefault(); if (post.id) openPostInModal(post.id); else openPostInModal(post.id || post._localId || null); modal.remove(); });
+      return el;
+    }
+
+    // fetch posts by this user
+    let posts = [];
+    if (USE_FIREBASE && db) {
+      try {
+        const postsSnap = await db.collection(POSTS_COLLECTION).where('authorId', '==', userId).orderBy('createdAt', 'desc').limit(20).get();
+        posts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch (err) {
+        console.warn('Failed to load profile posts:', err);
+      }
+    } else {
+      // local fallback: read campus_posts_v1
+      const arr = JSON.parse(localStorage.getItem('campus_posts_v1') || '[]');
+      posts = arr.filter(p => p.authorId === userId || p.authorFirst === (u.firstName) || p.authorLast === (u.lastName)).slice().reverse();
+    }
+
+    if (!posts || posts.length === 0) {
+      postsList.innerHTML = '<div class="text-sm text-gray-500">No recent posts.</div>';
+    } else {
+      posts.slice(0, 6).forEach(p => postsList.appendChild(createPostPreview(p)));
+    }
   } catch (err) {
     console.error("Open profile error:", err);
   }
@@ -1098,17 +1255,84 @@ async function openProfile(userId) {
 /* ---------------- open single post in modal --------------- */
 async function openPostInModal(postId) {
   try {
-    const doc = await db.collection(POSTS_COLLECTION).doc(postId).get();
-    if (!doc.exists) return alert("Post not found.");
-    const p = doc.data();
-    const modal = document.createElement("div");
-    modal.style.position = "fixed"; modal.style.left = 0; modal.style.top = 0; modal.style.width = "100%"; modal.style.height = "100%";
-    modal.style.zIndex = 99999; modal.style.display = "flex"; modal.style.alignItems = "center"; modal.style.justifyContent = "center";
-    modal.style.backdropFilter = "blur(4px)"; modal.innerHTML = `<div class="bg-white rounded-lg w-full max-w-3xl p-4">
-      <div class="flex justify-between items-center mb-3"><h3 class="font-bold">${escapeHtml(p.title || "Post")}</h3><button id="close-post" class="px-3 py-1 rounded bghover">Close</button></div>
-      <div class="space-y-3">${renderPost({ id: doc.id, ...p }).outerHTML}</div></div>`;
+    let doc = null;
+    let p = null;
+    if (USE_FIREBASE && db) {
+      doc = await db.collection(POSTS_COLLECTION).doc(postId).get();
+      if (!doc.exists) return alert("Post not found.");
+      p = doc.data();
+    } else {
+      // local fallback: try to find post in localStorage
+      const posts = JSON.parse(localStorage.getItem("campus_posts_v1") || "[]");
+      p = posts.find(x => (x.id === postId) || false) || null;
+      if (!p) {
+        // maybe postId is numeric index or missing id; show generic not found
+        return alert("Post not found (offline).");
+      }
+      // wrap to mimic Firestore doc id
+      doc = { id: postId };
+    }
+    const modal = document.createElement('div');
+    modal.style.position = 'fixed'; modal.style.left = 0; modal.style.top = 0; modal.style.width = '100%'; modal.style.height = '100%';
+    modal.style.zIndex = 99999; modal.style.display = 'flex'; modal.style.alignItems = 'center'; modal.style.justifyContent = 'center';
+    modal.style.backdropFilter = 'blur(4px)';
+
+    // Build a two-column modal: main post on left, recent posts by same author on right
+    const modalCard = document.createElement('div'); modalCard.className = 'bg-white rounded-lg w-full max-w-5xl p-4';
+    modalCard.style.maxHeight = '90vh'; modalCard.style.overflowY = 'auto';
+
+    const topRow = document.createElement('div'); topRow.className = 'flex justify-between items-center mb-3';
+    const titleEl = document.createElement('h3'); titleEl.className = 'font-bold'; titleEl.textContent = p.title || 'Post';
+    const closeBtn = document.createElement('button'); closeBtn.className = 'px-3 py-1 rounded bghover'; closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', () => modal.remove());
+    topRow.appendChild(titleEl); topRow.appendChild(closeBtn);
+    modalCard.appendChild(topRow);
+
+    const contentRow = document.createElement('div'); contentRow.className = 'flex gap-4';
+    // left: full post
+    const leftCol = document.createElement('div'); leftCol.className = 'flex-1';
+    leftCol.innerHTML = renderPost({ id: doc.id, ...p }).outerHTML;
+    contentRow.appendChild(leftCol);
+
+    // right: recent posts by same author
+    const rightCol = document.createElement('div'); rightCol.style.width = '320px'; rightCol.className = 'hidden lg:block';
+    rightCol.innerHTML = `<div class="font-semibold mb-2">More from this author</div><div id="post-author-list" class="space-y-2"></div>`;
+    contentRow.appendChild(rightCol);
+
+    modalCard.appendChild(contentRow);
+    modal.appendChild(modalCard);
     document.body.appendChild(modal);
-    modal.querySelector("#close-post").addEventListener("click", () => modal.remove());
+
+    // fetch recent posts by same author and populate right column (Firestore or local fallback)
+    (async function populateAuthorSideList() {
+      const listEl = modalCard.querySelector('#post-author-list');
+      listEl.innerHTML = '<div class="text-sm text-gray-500">Loading...</div>';
+      try {
+        let otherPosts = [];
+        if (USE_FIREBASE && db) {
+          if (p.authorId) {
+            const snap = await db.collection(POSTS_COLLECTION).where('authorId', '==', p.authorId).orderBy('createdAt', 'desc').limit(10).get();
+            otherPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          }
+        } else {
+          const arr = JSON.parse(localStorage.getItem('campus_posts_v1') || '[]');
+          otherPosts = arr.filter(x => x.authorId === p.authorId || ((x.authorFirst || '') === (p.authorFirst || '') && (x.authorLast || '') === (p.authorLast || ''))).slice().reverse().slice(0,10);
+        }
+        listEl.innerHTML = '';
+        if (!otherPosts || otherPosts.length === 0) listEl.innerHTML = '<div class="text-sm text-gray-500">No other posts.</div>';
+        else {
+          otherPosts.forEach(op => {
+            const preview = document.createElement('div'); preview.className = 'p-2 rounded hover:bg-gray-50';
+            preview.innerHTML = `<div class="font-medium text-sm">${escapeHtml(op.title || (op.body||'').slice(0,80))}</div><div class="text-xs text-gray-500">${escapeHtml(timeSince(op.createdAt && op.createdAt.toDate ? op.createdAt.toDate() : new Date(op.createdAt)))}</div>`;
+            preview.addEventListener('click', (ev) => { ev.preventDefault(); modal.remove(); openPostInModal(op.id); });
+            listEl.appendChild(preview);
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to load author posts for sidebar:', err);
+        listEl.innerHTML = '<div class="text-sm text-gray-500">Failed to load.</div>';
+      }
+    })();
   } catch (err) { console.error("Open post modal error:", err); }
 }
 
